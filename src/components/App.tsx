@@ -73,8 +73,7 @@ function App() {
             chainNamespace: CHAIN_NAMESPACES.SOLANA,
             chainId: isMainnet ? "0x3" : "0x1",
             rpcTarget: isMainnet
-              ? process.env.NEXT_PUBLIC_SOLANA_RPC_MAINNET ||
-                "https://api.mainnet-beta.solana.com"
+              ? "https://api.mainnet-beta.solana.com"
               : process.env.NEXT_PUBLIC_SOLANA_RPC ||
                 "https://api.devnet.solana.com",
           },
@@ -123,8 +122,7 @@ function App() {
     const isMainnet = network === "mainnet";
     var connection = new Connection(
       isMainnet
-        ? process.env.NEXT_PUBLIC_SOLANA_RPC_MAINNET ||
-          "https://api.mainnet-beta.solana.com"
+        ? "https://api.mainnet-beta.solana.com"
         : process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com"
     );
     setConnection(connection || null);
