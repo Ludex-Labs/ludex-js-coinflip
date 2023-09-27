@@ -1,8 +1,8 @@
 <p align="center">
-  <img width="100" height="100" src="/public/assets/SOL.svg">
+  <img width="100" height="100" src="/public/SOL.svg">
 </p>
 
-# A coin flip wager on Solana using Ludex Javascript SDK
+# Coin flip wager on Solana
 
 Try the game: https://coinflip.ludex.gg/
 
