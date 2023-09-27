@@ -29,8 +29,12 @@ BASE_URL=
 HOST_PK=
 ```
 
-and run the development server and open [http://localhost:3000](http://localhost:3000) with your browser!
+then run the development server and open [http://localhost:3000](http://localhost:3000) with your browser!
 
 ```bash
 npm run dev
 ```
+
+## Deployment
+
+We deploy our this app using [Netlify](https://app.netlify.com/). In order to get access ask another dev to join the Netlify team.
