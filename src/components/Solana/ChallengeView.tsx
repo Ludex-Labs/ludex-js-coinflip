@@ -81,14 +81,8 @@ export const ChallengeView: FC<{
           playerPubkey: playerPubkey,
         }),
       });
-
       const response = await _res.json();
-      const tx = response?.transaction;
-
-      console.log("tx", tx);
-
-      // const result = connection.getLatestBlockhash();
-      // tx.recentBlockhash = (await result).blockhash;
+      const tx = Transaction.from(Buffer.from(response?.transaction, "base64"));
       const res = await sendTransaction(tx);
       if (!res.toString().includes("Error")) {
         setJoined(true);
@@ -107,56 +101,46 @@ export const ChallengeView: FC<{
   };
 
   const leaveFTChallenge = async () => {
-    const response = await fetch(`/api/leave`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        challengeId: challengeId,
-        walletAddress: wallet.publicKey.toBase58(),
-      }),
-    }).then((res) => res.json());
-    console.log("response", response);
+    const playerPubkey = wallet.publicKey.toBase58();
 
-    // if (!wallet) return;
-    // try {
-    //   const env = isMainnet ? "MAINNET" : "DEVNET";
-    //   const ludexTx = new Challenge.ChallengeTXClient(
-    //     connection,
-    //     challenge?.blockchainAddress,
-    //     {
-    //       cluster: env,
-    //     }
-    //   );
-    //   const tx = await ludexTx.leave(wallet.publicKey.toBase58()).getTx();
-    //   const result = connection.getLatestBlockhash();
-    //   tx.recentBlockhash = (await result).blockhash;
-    //   const res = await sendTransaction(tx);
-    //   if (!res.toString().includes("Error")) {
-    //     setJoined(false);
-    //     toast.success("Challenge left!");
-    //     console.info("sig: ", res);
-    //   }
-    // } catch (error) {
-    //   console.error(error);
-    //   if (error?.toString().includes("Error")) {
-    //     toast.error("Leave challenge failed");
-    //   }
-    // }
+    if (!playerPubkey) {
+      toast.error("Please connect your wallet.");
+      return;
+    }
+
+    try {
+      const _res = await fetch(`/api/leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: challengeId,
+          playerPubkey: playerPubkey,
+        }),
+      });
+      const response = await _res.json();
+      const tx = Transaction.from(Buffer.from(response?.transaction, "base64"));
+      const res = await sendTransaction(tx);
+      if (!res.toString().includes("Error")) {
+        setJoined(false);
+        toast.success("Challenge left!");
+        console.info("sig: ", res);
+      }
+    } catch (error) {
+      console.log("error", error);
+      if (error?.toString().includes("Invalid account discriminator")) {
+        toast.error("Leave failed... challenge details invalid");
+      } else if (error?.toString().includes("Error")) {
+        toast.error("Leave challenge failed");
+      }
+    }
     return;
   };
 
   const sendTransaction = async (tx: Transaction) => {
     if (!provider) return "";
-    console.log("provider", provider);
     try {
       setIsLoading(true);
       const solanaWallet = new SolanaWallet(provider);
-
-      // const solanaWallet = new SolanaWallet(this.provider);
-      // const { signature } = await solanaWallet.signAndSendTransaction(
-      //   transaction
-      // );
-
       tx = await solanaWallet.signTransaction(tx);
       const sig = await connection.sendRawTransaction(tx.serialize());
       return sig;

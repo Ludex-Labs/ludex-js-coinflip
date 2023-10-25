@@ -8,12 +8,12 @@ export default async function handler(req, res) {
       baseUrl: process.env.REACT_APP_PROTOCOL_API,
     }).challenge;
 
-    const challenges = await challengeAPI.generateJoin({
+    const tx = await challengeAPI.generateJoin({
       challengeId: challengeId,
       playerPubkey: playerPubkey,
     });
 
-    res.json(challenges);
+    res.json(tx);
   } catch (error) {
     console.log("error", error);
     console.log("error", error?.response?.data);
