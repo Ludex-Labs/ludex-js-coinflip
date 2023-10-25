@@ -1,22 +1,18 @@
-import { Challenge } from "@ludex-labs/ludex-sdk-js";
-
-const ludexApi = new Challenge.ChallengeAPIClient(
-  process.env.LUDEX_KEY,
-  process.env.BASE_URL // If this isn't staging, leave blank
-);
+import { Ludex } from "@ludex-labs/ludex-sdk-js";
 
 export default async function handler(req, res) {
-  const { payoutId } = req.body;
+  // const { payoutId } = req.body;
 
-  const filter = {
-    payoutId: payoutId,
-  };
+  try {
+    const challengeAPI = new Ludex.ClientScoped(process.env.LUDEX_KEY, {
+      baseUrl: process.env.REACT_APP_PROTOCOL_API,
+    }).challenge;
 
-  const challenges = await ludexApi.list(filter, {
-    page: 1,
-    limit: 100,
-    orderBy: "claimedAt",
-    sort: "desc",
-  });
-  res.json(challenges);
+    const challenges = await challengeAPI.getChallenges();
+
+    res.json(challenges);
+  } catch (error) {
+    console.error(error?.message);
+    res.json({ error: error });
+  }
 }

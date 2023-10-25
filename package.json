@@ -12,7 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
-    "@ludex-labs/ludex-sdk-js": "^1.11.5",
+    "@ludex-labs/ludex-sdk-js": "file:../ludex-sdk-js",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.12.1",
     "@solana/spl-token": "^0.3.7",
