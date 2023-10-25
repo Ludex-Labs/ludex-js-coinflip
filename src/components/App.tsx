@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
-// import { ChallengeView } from "./Solana/ChallengeView";
+import { ChallengeView } from "./Solana/ChallengeView";
 import { RPC } from "./Solana/RPC";
 import { WalletSolana } from "./Solana/WalletSolana";
 import { Connection } from "@solana/web3.js";
@@ -500,17 +500,17 @@ function App() {
                 Back
               </Button>
             </Box>
+          ) : provider && connection != null ? (
+            <ChallengeView
+              provider={provider}
+              wallet={wallet}
+              isMainnet={isMainnet}
+              connection={connection}
+              challengeId={challengeId}
+              setChallengeId={setChallengeId}
+              setDisplayConfetti={setDisplayConfetti}
+            />
           ) : (
-            // ) : provider && connection != null ? (
-            //   <ChallengeView
-            //     provider={provider}
-            //     wallet={wallet}
-            //     isMainnet={isMainnet}
-            //     connection={connection}
-            //     challengeId={challengeId}
-            //     setChallengeId={setChallengeId}
-            //     setDisplayConfetti={setDisplayConfetti}
-            //   />
             <Button
               className="btn"
               variant={"contained"}
