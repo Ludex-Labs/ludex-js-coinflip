@@ -65,37 +65,58 @@ export const ChallengeView: FC<{
   };
 
   const joinFTChallenge = async () => {
-    // if (!wallet) return;
-    // try {
-    //   const env = isMainnet ? "MAINNET" : "DEVNET";
-    //   const ludexTx = new Challenge.ChallengeTXClient(
-    //     connection,
-    //     challenge?.blockchainAddress,
-    //     {
-    //       cluster: env,
-    //     }
-    //   );
-    //   const tx = await ludexTx.join(wallet.publicKey.toBase58()).getTx();
-    //   const result = connection.getLatestBlockhash();
-    //   tx.recentBlockhash = (await result).blockhash;
-    //   const res = await sendTransaction(tx);
-    //   if (!res.toString().includes("Error")) {
-    //     setJoined(true);
-    //     toast.success("Challenge joined!");
-    //     console.info("sig: ", res);
-    //   }
-    // } catch (error) {
-    //   console.error(error);
-    //   if (error?.toString().includes("Invalid account discriminator")) {
-    //     toast.error("Join failed... challenge details invalid");
-    //   } else if (error?.toString().includes("Error")) {
-    //     toast.error("Join challenge failed");
-    //   }
-    // }
+    const playerPubkey = wallet.publicKey.toBase58();
+
+    if (!playerPubkey) {
+      toast.error("Please connect your wallet.");
+      return;
+    }
+
+    try {
+      const _res = await fetch(`/api/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: challengeId,
+          playerPubkey: playerPubkey,
+        }),
+      });
+
+      const response = await _res.json();
+      const tx = response?.transaction;
+
+      console.log("tx", tx);
+
+      // const result = connection.getLatestBlockhash();
+      // tx.recentBlockhash = (await result).blockhash;
+      const res = await sendTransaction(tx);
+      if (!res.toString().includes("Error")) {
+        setJoined(true);
+        toast.success("Challenge joined!");
+        console.info("sig: ", res);
+      }
+    } catch (error) {
+      console.log("error", error);
+      if (error?.toString().includes("Invalid account discriminator")) {
+        toast.error("Join failed... challenge details invalid");
+      } else if (error?.toString().includes("Error")) {
+        toast.error("Join challenge failed");
+      }
+    }
     return;
   };
 
   const leaveFTChallenge = async () => {
+    const response = await fetch(`/api/leave`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        challengeId: challengeId,
+        walletAddress: wallet.publicKey.toBase58(),
+      }),
+    }).then((res) => res.json());
+    console.log("response", response);
+
     // if (!wallet) return;
     // try {
     //   const env = isMainnet ? "MAINNET" : "DEVNET";
@@ -126,9 +147,16 @@ export const ChallengeView: FC<{
 
   const sendTransaction = async (tx: Transaction) => {
     if (!provider) return "";
+    console.log("provider", provider);
     try {
       setIsLoading(true);
       const solanaWallet = new SolanaWallet(provider);
+
+      // const solanaWallet = new SolanaWallet(this.provider);
+      // const { signature } = await solanaWallet.signAndSendTransaction(
+      //   transaction
+      // );
+
       tx = await solanaWallet.signTransaction(tx);
       const sig = await connection.sendRawTransaction(tx.serialize());
       return sig;
@@ -176,7 +204,7 @@ export const ChallengeView: FC<{
       getChallenge();
       setGameLoading(false);
       console.log("res", res);
-      if (res?.status !== 200) throw new Error("Something went wrong...");
+      // if (res?.status !== 200) throw new Error("Something went wrong...");
       if (res?.error) toast.error(res?.error?.toString());
       if (res?.winner && res?.winner === wallet?.publicKey?.toString()) {
         toast.success(`You won!`);
@@ -287,16 +315,16 @@ export const ChallengeView: FC<{
                 {players.map((player: any) => {
                   return (
                     <a
-                      key={player?.walletAddress}
+                      key={player}
                       target="_blank"
                       rel="noreferrer"
                       href={
                         "https://solscan.io/account/" +
-                        player?.walletAddress +
+                        player +
                         "?cluster=devnet"
                       }
                     >
-                      {player?.walletAddress?.substring(0, 25)}...
+                      {player?.substring(0, 25)}...
                     </a>
                   );
                 })}
@@ -359,12 +387,12 @@ export const ChallengeView: FC<{
           fullWidth
           variant="contained"
           size="large"
-          disabled={
-            isLoading ||
-            players?.length !== 2 ||
-            !challengeReady ||
-            players.includes(wallet.publicKey.toBase58())
-          }
+          // disabled={
+          //   isLoading ||
+          //   players?.length !== 2 ||
+          //   !challengeReady ||
+          //   players.includes(wallet.publicKey.toBase58())
+          // }
           sx={{
             backgroundColor: "#3eb718",
             mt: 1,

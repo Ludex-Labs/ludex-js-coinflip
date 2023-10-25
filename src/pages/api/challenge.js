@@ -7,8 +7,8 @@ export default async function handler(req, res) {
       baseUrl: process.env.REACT_APP_PROTOCOL_API,
     }).challenge;
 
-    const challenges = await challengeAPI.getChallenge(challengeId);
-    res.json(challenges);
+    const challenge = await challengeAPI.getChallenge(challengeId);
+    res.json(challenge);
   } catch (error) {
     console.error(error?.message);
     res.json({ error: error });
