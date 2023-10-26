@@ -11,6 +11,7 @@ export default async function handler(req, res) {
     const tx = await challengeAPI.generateJoin({
       challengeId: challengeId,
       playerPubkey: playerPubkey,
+      gasless: true,
     });
 
     res.json(tx);

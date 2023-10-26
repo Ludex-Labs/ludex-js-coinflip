@@ -203,8 +203,34 @@ export const ChallengeView: FC<{
     }
   };
 
+  const cancelGame = async () => {
+    try {
+      const response = await fetch(`/api/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: challenge?.id,
+        }),
+      });
+
+      const res = await response.json();
+      getChallenge();
+      console.log("res", res);
+      // if (res?.status !== 200) throw new Error("Something went wrong...");
+      if (res?.error) toast.error(res?.error?.toString());
+    } catch (e) {
+      setGameLoading(false);
+      console.error(e);
+      if (e) toast.error(e?.toString());
+      throw e;
+    }
+  };
+
   const challengeReady =
     challenge?.state === "CREATED" || challenge?.state === "LOCKED";
+
+  const challengeCancelled =
+    challenge?.state === "CANCELED" || challenge?.state === "CANCELING";
 
   if (!challenge) return <div>Loading...</div>;
 
@@ -273,14 +299,58 @@ export const ChallengeView: FC<{
               target="_blank"
               rel="noreferrer"
               href={
-                "https://solscan.io/account/" +
-                challenge?.blockchainAddress +
-                "?cluster=devnet"
+                challenge?.payout?.chain === "SOLANA"
+                  ? "https://solscan.io/account/" +
+                    challenge?.blockchainAddress +
+                    "?cluster=devnet"
+                  : challenge?.payout?.chain === "AVALANCHE"
+                  ? "'https://testnet.snowtrace.io/'" +
+                    challenge?.blockchainAddress
+                  : ""
               }
             >
               {challenge?.blockchainAddress?.substring(0, 15)}...
             </a>
           </Box>
+          <Divider sx={{ mt: 1, mb: 1 }} />
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <span>Chain</span>
+            <span>{challenge?.payout?.chain}</span>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <span>Entry Fee</span>
+            <span>{challenge?.payout?.entryFee}</span>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <span>Mediator Rake</span>
+            <span>{challenge?.payout?.mediatorRake}</span>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <span>Provider Rake</span>
+            <span>{challenge?.payout?.providerRake}</span>
+          </Box>
+
           {players?.length > 0 && (
             <>
               <Divider sx={{ mt: 1, mb: 1 }} />
@@ -293,7 +363,8 @@ export const ChallengeView: FC<{
                 }}
               >
                 <span>
-                  Players ({players?.length}/{challenge?.limit})
+                  Players ({players?.length}/{" "}
+                  {challenge?.limit ? " / " + challenge?.limit : ""})
                 </span>
 
                 {players.map((player: any) => {
@@ -303,9 +374,13 @@ export const ChallengeView: FC<{
                       target="_blank"
                       rel="noreferrer"
                       href={
-                        "https://solscan.io/account/" +
-                        player +
-                        "?cluster=devnet"
+                        challenge?.payout?.chain === "SOLANA"
+                          ? "https://solscan.io/account/" +
+                            player +
+                            "?cluster=devnet"
+                          : challenge?.payout?.chain === "AVALANCHE"
+                          ? "'https://testnet.snowtrace.io/'" + player
+                          : ""
                       }
                     >
                       {player?.substring(0, 25)}...
@@ -371,12 +446,12 @@ export const ChallengeView: FC<{
           fullWidth
           variant="contained"
           size="large"
-          // disabled={
-          //   isLoading ||
-          //   players?.length !== 2 ||
-          //   !challengeReady ||
-          //   players.includes(wallet.publicKey.toBase58())
-          // }
+          disabled={
+            isLoading ||
+            // players?.length !== 2 ||
+            !challengeReady ||
+            players.includes(wallet.publicKey.toBase58())
+          }
           sx={{
             backgroundColor: "#3eb718",
             mt: 1,
@@ -384,6 +459,21 @@ export const ChallengeView: FC<{
           onClick={() => startGame()}
         >
           Start Game
+        </Button>
+
+        <Button
+          className="btn"
+          fullWidth
+          variant="contained"
+          size="large"
+          disabled={isLoading || challengeCancelled}
+          sx={{
+            backgroundColor: "#f45252",
+            mt: 1,
+          }}
+          onClick={() => cancelGame()}
+        >
+          Cancel Game
         </Button>
 
         <Button

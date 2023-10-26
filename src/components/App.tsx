@@ -29,7 +29,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import FormCreateChallenge from "./FormCreateChallenge";
 
 function App() {
   const [viewWallet, setViewWallet] = useState<boolean>(false);
@@ -40,12 +39,11 @@ function App() {
   const [provider, setProvider] = useState<SafeEventEmitterProvider | null>(
     null
   );
-  const [payoutId, setPayoutId] = useState<number>(0);
+  const [payoutId, setPayoutId] = useState<number>(91);
   const [challengeId, setChallengeId] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [challenges, setChallenges] = useState<any[]>([]);
   const [displayConfetti, setDisplayConfetti] = useState<boolean>(false);
-  const [openCreateDialog, setOpenCreateDialog] = useState<boolean>(false);
   const [hideCompleted, setHideCompleted] = useState<boolean>(true);
 
   useEffect(() => {
@@ -151,16 +149,15 @@ function App() {
     toast.success("Logged out!");
   };
 
-  const createChallenge = async (house: boolean) => {
+  const createChallenge = async () => {
     await toast.promise(
       Promise.resolve(
         (async () => {
           try {
-            setOpenCreateDialog(false);
             const response = await fetch(`/api/create`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ house: house, payoutId: payoutId }),
+              body: JSON.stringify({ payoutId: payoutId }),
             });
             console.log("response", response);
             const res = await response.json();
@@ -281,7 +278,7 @@ function App() {
 
               <Button
                 onClick={() => {
-                  setPayoutId(79);
+                  setPayoutId(91);
                 }}
                 className="btn"
                 variant="outlined"
@@ -295,89 +292,34 @@ function App() {
                   style={{ marginRight: "10px" }}
                 />
                 <Typography variant="subtitle2">
-                  Entry Fee: 0.01 WSOL
+                  Entry Fee: 0.0105 SOL
+                  <br />
+                  Winning: 0.02 SOL
+                </Typography>
+              </Button>
+
+              <Button
+                onClick={() => {
+                  setPayoutId(96);
+                }}
+                disabled
+                className="btn"
+                variant="outlined"
+                sx={{ mt: 1 }}
+              >
+                <Image
+                  src={"/avax.svg"}
+                  alt="WSOL"
+                  height={30}
+                  width={30}
+                  style={{ marginRight: "10px" }}
+                />
+                <Typography variant="subtitle2">
+                  Entry Fee: 0.0105 WSOL
                   <br />
                   Winning: 0.02 WSOL
                 </Typography>
               </Button>
-
-              <Button
-                onClick={() => {
-                  setPayoutId(80);
-                }}
-                className="btn"
-                variant="outlined"
-                sx={{ mt: 1 }}
-              >
-                <Image
-                  src={"/SOL.svg"}
-                  alt="WSOL"
-                  height={30}
-                  width={30}
-                  style={{ marginRight: "10px" }}
-                />
-                <Typography variant="subtitle2">
-                  Entry Fee: 0.05 WSOL
-                  <br />
-                  Winning: 0.1 WSOL
-                </Typography>
-              </Button>
-
-              <Button
-                onClick={() => {
-                  setPayoutId(81);
-                }}
-                className="btn"
-                variant="outlined"
-                sx={{ mt: 1 }}
-              >
-                <Image
-                  src={"/SOL.svg"}
-                  alt="WSOL"
-                  height={30}
-                  width={30}
-                  style={{ marginRight: "10px" }}
-                />
-                <Typography variant="subtitle2">
-                  Entry Fee: 0.1 WSOL
-                  <br />
-                  Winning: 0.2 WSOL
-                </Typography>
-              </Button>
-
-              {/* <Button
-                onClick={() => setPayoutId(91)}
-                className="btn"
-                variant="outlined"
-                sx={{ mt: 1 }}
-                disabled
-              >
-                <Image
-                  src={"/SOL.svg"}
-                  alt="SOL"
-                  height={25}
-                  width={25}
-                  style={{ marginRight: "10px" }}
-                />
-                SOL - 0.01
-              </Button>
-
-              <Button
-                onClick={() => setPayoutId(88)}
-                className="btn"
-                variant="outlined"
-                sx={{ mt: 1 }}
-                disabled
-              >
-                <Image
-                  src={"/USDC.png"}
-                  alt="USDC"
-                  height={25}
-                  width={25}
-                  style={{ marginRight: "10px" }}
-                />
-                USDC - $0.10
-              </Button> */}
             </Box>
           ) : provider && connection != null && challengeId === 0 ? (
             <Box sx={{ width: "100%" }}>
@@ -483,7 +425,7 @@ function App() {
               </FormGroup>
 
               <Button
-                onClick={() => setOpenCreateDialog(true)}
+                onClick={() => createChallenge()}
                 className="btn"
                 variant="contained"
                 sx={{ mt: 2, backgroundColor: "#3eb718" }}
@@ -552,15 +494,6 @@ function App() {
           )}
         </span>
       </Box>
-
-      <FormCreateChallenge
-        openCreateDialog={openCreateDialog}
-        setOpenCreateDialog={setOpenCreateDialog}
-        payoutId={payoutId}
-        getChallenges={getChallenges}
-        setChallengeId={setChallengeId}
-        createChallenge={createChallenge}
-      />
     </Box>
   );
 }

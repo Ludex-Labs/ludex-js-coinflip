@@ -9,7 +9,6 @@ async function waitForChallengeLock(challengeId) {
   while (challenge === null || challenge.state !== "LOCKED") {
     await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds before making the next API call
     challenge = await challengeAPI.getChallenge(challengeId);
-    console.log("------locked-------");
   }
   return challenge;
 }
@@ -32,7 +31,7 @@ export default async function handler(req, res) {
   }
 
   const players = await challenge.players;
-  if (players.length === 0) return res.json({ error: "Not enough players" });
+  //if (players.length === 0) return res.json({ error: "Not enough players" });
 
   if (challenge.state.includes("CREATED")) {
     await challengeAPI.lockChallenge(challengeId);
@@ -58,8 +57,9 @@ export default async function handler(req, res) {
       });
       res.json({ winner: winner });
     } catch (error) {
-      console.log("error res", error?.response);
-      res.json({ error: error });
+      console.log("error response", error?.response);
+      console.log("error response data", error?.response?.data);
+      res.json(error?.response?.data);
     }
   } else {
     res.json({ error: "The challenge must be locked first!" });

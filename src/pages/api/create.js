@@ -19,14 +19,7 @@ async function waitForChallengeCreation(challengeId) {
 }
 
 export default async function handler(req, res) {
-  const { house, payoutId } = req.body;
-
-  const possiblePayouts = [79, 80, 81];
-  if (!possiblePayouts.includes(payoutId)) {
-    res.status(404);
-    res.send({ error: "Payout invalid!" });
-    return;
-  }
+  const { payoutId } = req.body;
 
   const challengeOnChain = await challengeAPI.createChallenge({
     payoutId: payoutId,
@@ -39,25 +32,6 @@ export default async function handler(req, res) {
       challengeOnChain?.challengeId
     );
     blockchainAddress = _challenge.blockchainAddress;
-  }
-
-  if (house) {
-    const keypair = Keypair.fromSecretKey(bs58.decode(process.env.HOST_PK));
-    var connection = new Connection(
-      process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com"
-    );
-    const ludexTx = new Challenge.ChallengeTXClient(
-      connection,
-      blockchainAddress,
-      {
-        cluster: "DEVNET",
-      }
-    );
-    console.log("ludexTx", ludexTx);
-    const res = await ludexTx
-      .join(keypair.publicKey.toBase58())
-      .send([keypair]);
-    console.log("res", res);
   }
 
   res.json(challengeOnChain?.challengeId);
