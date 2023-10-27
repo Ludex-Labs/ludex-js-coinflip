@@ -64,20 +64,13 @@ export const ChallengeView: FC<{
   };
 
   const joinFTChallenge = async () => {
-    const playerPubkey = wallet.publicKey.toBase58();
-
-    if (!playerPubkey) {
-      toast.error("Please connect your wallet.");
-      return;
-    }
-
     try {
       const response = await fetch(`/api/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           challengeId: challengeId,
-          playerPubkey: playerPubkey,
+          playerPubkey: wallet.publicKey.toBase58(),
         }),
       });
       const res = await response.json();
@@ -94,42 +87,32 @@ export const ChallengeView: FC<{
       else toast.error(JSON.stringify(error));
       console.error(error);
     }
-    return;
   };
 
   const leaveFTChallenge = async () => {
-    const playerPubkey = wallet.publicKey.toBase58();
-
-    if (!playerPubkey) {
-      toast.error("Please connect your wallet.");
-      return;
-    }
-
     try {
-      const _res = await fetch(`/api/leave`, {
+      const response = await fetch(`/api/leave`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           challengeId: challengeId,
-          playerPubkey: playerPubkey,
+          playerPubkey: wallet.publicKey.toBase58(),
         }),
       });
-      const response = await _res.json();
-      const tx = Transaction.from(Buffer.from(response?.transaction, "base64"));
-      const res = await sendTransaction(tx);
-      if (!res.toString().includes("Error")) {
+      const res = await response.json();
+      if (res?.code >= 300) throw res;
+      const tx = Transaction.from(Buffer.from(res?.transaction, "base64"));
+      const sig = await sendTransaction(tx);
+      if (!sig.toString().includes("Error")) {
         toast.success("Challenge left!");
-        console.info("sig: ", res);
+        console.info("sig: ", sig);
       }
     } catch (error) {
-      console.log("error", error);
-      if (error?.toString().includes("Invalid account discriminator")) {
-        toast.error("Leave failed... challenge details invalid");
-      } else if (error?.toString().includes("Error")) {
-        toast.error("Leave challenge failed");
-      }
+      // @ts-ignore
+      if (error?.message) toast.error(error.message);
+      else toast.error(JSON.stringify(error));
+      console.error(error);
     }
-    return;
   };
 
   const sendTransaction = async (tx: Transaction) => {
@@ -461,23 +444,6 @@ export const ChallengeView: FC<{
           alignItems: "center",
         }}
       >
-        {/* {joined && (
-          <Button
-            className="btn"
-            fullWidth
-            variant="contained"
-            size="large"
-            disabled={isLoading}
-            sx={{
-              backgroundColor: "#3eb718",
-              mt: 1,
-            }}
-            onClick={() => leaveFTChallenge()}
-          >
-            Leave
-          </Button>
-        )} */}
-
         <Button
           className="btn"
           fullWidth
@@ -495,7 +461,7 @@ export const ChallengeView: FC<{
           }}
           onClick={() => startGame()}
         >
-          Start Game
+          Start
         </Button>
 
         <Button
@@ -510,7 +476,21 @@ export const ChallengeView: FC<{
           }}
           onClick={() => cancelGame()}
         >
-          Cancel Game
+          Cancel
+        </Button>
+
+        <Button
+          className="btn"
+          fullWidth
+          variant="contained"
+          size="large"
+          disabled={isLoading || !players.includes(wallet.publicKey.toBase58())}
+          sx={{
+            mt: 1,
+          }}
+          onClick={() => leaveFTChallenge()}
+        >
+          Leave
         </Button>
       </Box>
 
