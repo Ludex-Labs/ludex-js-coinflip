@@ -185,7 +185,7 @@ export const ChallengeView: FC<{
       console.log("response", response);
 
       const res = await response.json();
-      getChallenge();
+      getChallenge(challengeId);
       setGameLoading(false);
       console.log("res", res);
       // if (res?.status !== 200) throw new Error("Something went wrong...");
@@ -250,7 +250,7 @@ export const ChallengeView: FC<{
           size="small"
           onClick={() => {
             toast.success("Fetching challenge!");
-            getChallenge();
+            getChallenge(challengeId);
           }}
           sx={{
             display: "flex",
