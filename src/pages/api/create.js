@@ -7,10 +7,10 @@ const challengeAPI = new Ludex.ClientScoped(process.env.LUDEX_KEY, {
 export default async function handler(req, res) {
   const { payoutId } = req.body;
   try {
-    const challenge = await challengeAPI.createChallenge({
+    const response = await challengeAPI.createChallenge({
       payoutId: payoutId,
     });
-    res.json(challenge);
+    res.json(response);
   } catch (error) {
     console.log(error?.response?.data);
     res.status(error?.response?.data?.code).json(error?.response?.data);

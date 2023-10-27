@@ -7,9 +7,9 @@ const challengeAPI = new Ludex.ClientScoped(process.env.LUDEX_KEY, {
 export default async function handler(req, res) {
   var { challengeId } = req.body;
   try {
-    var res = await challengeAPI.cancelChallenge(challengeId);
-    console.log("res", res);
-    res.json(res);
+    var response = await challengeAPI.cancelChallenge(challengeId);
+    console.log("res", response);
+    res.json(response);
   } catch (error) {
     console.log("error", error);
     console.log(error?.response?.data);
