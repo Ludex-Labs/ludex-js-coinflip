@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const response = await challengeAPI.createChallenge({
       payoutId: payoutId,
     });
-    res.json(response);
+    res.json(response.data);
   } catch (error) {
     console.log(error?.response?.data);
     res.status(error?.response?.data?.code).json(error?.response?.data);

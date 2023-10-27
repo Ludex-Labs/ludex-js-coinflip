@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   try {
     var response = await challengeAPI.cancelChallenge(challengeId);
     console.log("res", response);
-    res.json(response);
+    res.json(response.data);
   } catch (error) {
     console.log("error", error);
     console.log(error?.response?.data);
