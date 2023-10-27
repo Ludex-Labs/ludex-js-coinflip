@@ -21,18 +21,24 @@ async function waitForChallengeCreation(challengeId) {
 export default async function handler(req, res) {
   const { payoutId } = req.body;
 
-  const challengeOnChain = await challengeAPI.createChallenge({
-    payoutId: payoutId,
-  });
+  try {
+    const challengeOnChain = await challengeAPI.createChallenge({
+      payoutId: payoutId,
+    });
 
-  var blockchainAddress = challengeOnChain?.blockchainAddress;
-  // Non shelf challenges must wait for blockchainAddress
-  if (challengeOnChain?.blockchainAddress === null) {
-    const _challenge = await waitForChallengeCreation(
-      challengeOnChain?.challengeId
-    );
-    blockchainAddress = _challenge.blockchainAddress;
+    var blockchainAddress = challengeOnChain?.blockchainAddress;
+    // Non shelf challenges must wait for blockchainAddress
+    if (challengeOnChain?.blockchainAddress === null) {
+      const _challenge = await waitForChallengeCreation(
+        challengeOnChain?.challengeId
+      );
+      blockchainAddress = _challenge.blockchainAddress;
+    }
+
+    res.json(challengeOnChain?.challengeId);
+  } catch (error) {
+    console.log("error", error?.message);
+    console.log("error data", error?.message?.data);
+    res.json({ error: error });
   }
-
-  res.json(challengeOnChain?.challengeId);
 }

@@ -1,13 +1,19 @@
-import { Challenge } from "@ludex-labs/ludex-sdk-js";
-import { Connection, Keypair, Transaction } from "@solana/web3.js";
-import * as bs58 from "bs58";
-
-const ludexApi = new Challenge.ChallengeAPIClient(
-  process.env.LUDEX_KEY,
-  process.env.BASE_URL // If this isn't staging, leave blank
-);
+import { Ludex } from "@ludex-labs/ludex-sdk-js";
 
 export default async function handler(req, res) {
-  console.log('req', req);
-  res.json({});
+  const body = req.body;
+
+  console.log("body", body);
+
+  try {
+    const challengeAPI = new Ludex.ClientScoped(process.env.LUDEX_KEY, {
+      baseUrl: process.env.REACT_APP_PROTOCOL_API,
+    }).challenge;
+
+    const challenge = await challengeAPI.getChallenge(challengeId);
+    res.json(challenge);
+  } catch (error) {
+    console.error(error?.message);
+    res.json({ error: error });
+  }
 }

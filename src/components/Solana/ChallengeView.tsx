@@ -330,7 +330,7 @@ export const ChallengeView: FC<{
             }}
           >
             <span>Entry Fee</span>
-            <span>{challenge?.payout?.entryFee}</span>
+            <span>{challenge?.payout?.uiValues?.entryFee}</span>
           </Box>
           <Box
             sx={{
@@ -339,7 +339,7 @@ export const ChallengeView: FC<{
             }}
           >
             <span>Mediator Rake</span>
-            <span>{challenge?.payout?.mediatorRake}</span>
+            <span>{challenge?.payout?.uiValues?.mediatorRake}</span>
           </Box>
           <Box
             sx={{
@@ -348,7 +348,7 @@ export const ChallengeView: FC<{
             }}
           >
             <span>Provider Rake</span>
-            <span>{challenge?.payout?.providerRake}</span>
+            <span>{challenge?.payout?.uiValues?.providerRake}</span>
           </Box>
 
           {players?.length > 0 && (
@@ -363,8 +363,7 @@ export const ChallengeView: FC<{
                 }}
               >
                 <span>
-                  Players ({players?.length}/{" "}
-                  {challenge?.limit ? " / " + challenge?.limit : ""})
+                  Players ({players?.length} / {challenge?.limit})
                 </span>
 
                 {players.map((player: any) => {
@@ -446,12 +445,12 @@ export const ChallengeView: FC<{
           fullWidth
           variant="contained"
           size="large"
-          disabled={
-            isLoading ||
-            // players?.length !== 2 ||
-            !challengeReady ||
-            players.includes(wallet.publicKey.toBase58())
-          }
+          // disabled={
+          //   isLoading ||
+          //   // players?.length !== 2 ||
+          //   !challengeReady ||
+          //   players.includes(wallet.publicKey.toBase58())
+          // }
           sx={{
             backgroundColor: "#3eb718",
             mt: 1,
