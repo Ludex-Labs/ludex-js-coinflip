@@ -7,7 +7,7 @@ import { Connection, Transaction } from "@solana/web3.js";
 import { SolanaWallet } from "@web3auth/solana-provider";
 import { SafeEventEmitterProvider } from "@web3auth/base";
 import Lottie from "react-lottie";
-import * as flip from "../flip.json";
+import * as flip from "./animations/flip.json";
 
 // MUI
 import {
@@ -48,11 +48,11 @@ export const ChallengeView: FC<{
   const [players, setPlayers] = useState<any>(undefined);
 
   useEffect(() => {
-    getChallenge();
+    getChallenge(challengeId);
   }, []);
 
-  const getChallenge = async () => {
-    const response = await fetch(`/api/challenge`, {
+  const getChallenge = async (challengeId: number) => {
+    const response = await fetch(`/api/getChallenge`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -175,7 +175,7 @@ export const ChallengeView: FC<{
     setGameLoading(true);
 
     try {
-      const response = await fetch(`/api/start`, {
+      const response = await fetch(`/api/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -208,21 +208,16 @@ export const ChallengeView: FC<{
       const response = await fetch(`/api/cancel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          challengeId: challenge?.id,
-        }),
+        body: JSON.stringify({ challengeId: challenge?.id }),
       });
-
       const res = await response.json();
-      getChallenge();
-      console.log("res", res);
-      // if (res?.status !== 200) throw new Error("Something went wrong...");
-      if (res?.error) toast.error(res?.error?.toString());
-    } catch (e) {
-      setGameLoading(false);
-      console.error(e);
-      if (e) toast.error(e?.toString());
-      throw e;
+      if (res?.code >= 300) throw res;
+      else setChallengeId(res?.id);
+    } catch (error) {
+      // @ts-ignore
+      if (error?.message) toast.error(error.message);
+      else toast.error(JSON.stringify(error));
+      console.error(error);
     }
   };
 
@@ -232,7 +227,9 @@ export const ChallengeView: FC<{
   const challengeCancelled =
     challenge?.state === "CANCELED" || challenge?.state === "CANCELING";
 
-  if (!challenge) return <div>Loading...</div>;
+  if (!challenge) {
+    return <CircularProgress />;
+  }
 
   return (
     <Box

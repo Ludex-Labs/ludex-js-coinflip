@@ -22,16 +22,7 @@ export default async function handler(req, res) {
   const { challengeId } = req.body;
 
   var challenge = await challengeAPI.getChallenge(challengeId);
-
-  if (
-    challenge.state.includes("RESOLVE") ||
-    challenge.state.includes("CANCEL")
-  ) {
-    return res.json({ error: "This challenge is already complete!" });
-  }
-
-  const players = await challenge.players;
-  //if (players.length === 0) return res.json({ error: "Not enough players" });
+  const { players, entryFee, mediatorRake, providerRake } = challenge;
 
   if (challenge.state.includes("CREATED")) {
     await challengeAPI.lockChallenge(challengeId);
@@ -39,29 +30,22 @@ export default async function handler(req, res) {
     challenge = challengeLocked;
   }
 
-  if (challenge.state.includes("LOCKED")) {
-    const winner = flipCoin(players);
+  const winnerAddress = flipCoin(players);
+  const amount = (entryFee - mediatorRake - providerRake) * players.length;
 
-    const { entryFee, mediatorRake, providerRake } = challenge;
-    const amount = (entryFee - mediatorRake - providerRake) * players.length;
-
-    try {
-      await challengeAPI.resolveChallenge({
-        challengeId,
-        payout: [
-          {
-            to: winner,
-            amount: amount,
-          },
-        ],
-      });
-      res.json({ winner: winner });
-    } catch (error) {
-      console.log("error response", error?.response);
-      console.log("error response data", error?.response?.data);
-      res.json(error?.response?.data);
-    }
-  } else {
-    res.json({ error: "The challenge must be locked first!" });
+  try {
+    await challengeAPI.resolveChallenge({
+      challengeId,
+      payout: [
+        {
+          to: winnerAddress,
+          amount: amount,
+        },
+      ],
+    });
+    res.json({ winner: winnerAddress });
+  } catch (error) {
+    console.log(error?.response?.data);
+    res.status(error?.response?.data?.code).json(error?.response?.data);
   }
 }
