@@ -21,7 +21,7 @@ import {
   DialogContent,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export const ChallengeView: FC<{
   provider: SafeEventEmitterProvider | null;
@@ -41,7 +41,6 @@ export const ChallengeView: FC<{
     setChallengeId,
     setDisplayConfetti,
   } = props;
-  const [joined, setJoined] = useState<boolean>(false);
   const [gameLoaded, setGameLoading] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [challenge, setChallenge] = useState<any>(undefined);
@@ -73,7 +72,7 @@ export const ChallengeView: FC<{
     }
 
     try {
-      const _res = await fetch(`/api/join`, {
+      const response = await fetch(`/api/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -81,21 +80,19 @@ export const ChallengeView: FC<{
           playerPubkey: playerPubkey,
         }),
       });
-      const response = await _res.json();
-      const tx = Transaction.from(Buffer.from(response?.transaction, "base64"));
-      const res = await sendTransaction(tx);
-      if (!res.toString().includes("Error")) {
-        setJoined(true);
+      const res = await response.json();
+      if (res?.code >= 300) throw res;
+      const tx = Transaction.from(Buffer.from(res?.transaction, "base64"));
+      const sig = await sendTransaction(tx);
+      if (!sig.toString().includes("Error")) {
         toast.success("Challenge joined!");
-        console.info("sig: ", res);
+        console.info("sig: ", sig);
       }
     } catch (error) {
-      console.log("error", error);
-      if (error?.toString().includes("Invalid account discriminator")) {
-        toast.error("Join failed... challenge details invalid");
-      } else if (error?.toString().includes("Error")) {
-        toast.error("Join challenge failed");
-      }
+      // @ts-ignore
+      if (error?.message) toast.error(error.message);
+      else toast.error(JSON.stringify(error));
+      console.error(error);
     }
     return;
   };
@@ -121,7 +118,6 @@ export const ChallengeView: FC<{
       const tx = Transaction.from(Buffer.from(response?.transaction, "base64"));
       const res = await sendTransaction(tx);
       if (!res.toString().includes("Error")) {
-        setJoined(false);
         toast.success("Challenge left!");
         console.info("sig: ", res);
       }
@@ -163,7 +159,6 @@ export const ChallengeView: FC<{
       toast.error("Challenge is already full.");
     } else if (error?.includes("already in use")) {
       toast.error("This address is already joined.");
-      setJoined(true);
     } else if (error?.includes("no record of a prior credit")) {
       toast.error("You don't have enough credit.");
     } else if (error?.includes("User rejected the request")) {
@@ -242,10 +237,28 @@ export const ChallengeView: FC<{
         variant={"h5"}
         sx={{ mb: 2, display: "flex", justifyContent: "center" }}
       >
-        Challenge {challengeId.toString()}
+        Challenge {challengeId?.toString()}
       </Typography>
 
       <Box sx={{ position: "relative" }}>
+        <IconButton
+          size="small"
+          onClick={() => {
+            setChallengeId(0);
+            setDisplayConfetti(false);
+          }}
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            position: "absolute",
+            top: "-20px",
+            left: "-20px",
+            background: "#374151",
+            border: "1px solid #6b727e",
+          }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
         <IconButton
           size="small"
           onClick={() => {
@@ -348,44 +361,95 @@ export const ChallengeView: FC<{
             <span>{challenge?.payout?.uiValues?.providerRake}</span>
           </Box>
 
-          {players?.length > 0 && (
-            <>
-              <Divider sx={{ mt: 1, mb: 1 }} />
+          <Divider sx={{ mt: 1, mb: 1 }} />
 
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexDirection: "column",
+            }}
+          >
+            <Box sx={{ mb: 1 }}>
+              Players ({players?.length}/{challenge?.limit})
+            </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+              }}
+            >
+              <Button
+                onClick={() => joinFTChallenge()}
+                fullWidth
+                disabled={isLoading}
+                sx={
+                  players.length > 0
+                    ? {
+                        textAlign: "center",
+                        width: "100%",
+                        border: "3px solid #fff",
+                        mb: 1,
+                      }
+                    : {
+                        textAlign: "center",
+                        width: "100%",
+                        border: "3px dotted #fff",
+                        mb: 1,
+                      }
+                }
+              >
+                {isLoading ? (
+                  <CircularProgress size={24} />
+                ) : players.length > 0 ? (
+                  players[0]?.substring(0, 25) + "..."
+                ) : (
+                  "Join"
+                )}
+              </Button>
               <Box
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  flexDirection: "column",
+                  textAlign: "center",
+                  width: "100%",
+                  mb: 1,
+                  fontWeight: "bold",
+                  fontStyle: "italic",
                 }}
               >
-                <span>
-                  Players ({players?.length} / {challenge?.limit})
-                </span>
-
-                {players.map((player: any) => {
-                  return (
-                    <a
-                      key={player}
-                      target="_blank"
-                      rel="noreferrer"
-                      href={
-                        challenge?.payout?.chain === "SOLANA"
-                          ? "https://solscan.io/account/" +
-                            player +
-                            "?cluster=devnet"
-                          : challenge?.payout?.chain === "AVALANCHE"
-                          ? "'https://testnet.snowtrace.io/'" + player
-                          : ""
-                      }
-                    >
-                      {player?.substring(0, 25)}...
-                    </a>
-                  );
-                })}
+                VS
               </Box>
-            </>
-          )}
+
+              <Button
+                onClick={() => joinFTChallenge()}
+                fullWidth
+                sx={
+                  players.length > 1
+                    ? {
+                        textAlign: "center",
+                        width: "100%",
+                        border: "3px solid #fff",
+                        mb: 1,
+                      }
+                    : {
+                        textAlign: "center",
+                        width: "100%",
+                        border: "3px dotted #fff",
+                        mb: 1,
+                      }
+                }
+              >
+                {isLoading ? (
+                  <CircularProgress size={24} />
+                ) : players.length > 1 ? (
+                  players[1]?.substring(0, 25) + "..."
+                ) : (
+                  "Join"
+                )}
+              </Button>
+            </Box>
+          </Box>
         </Box>
       </Box>
 
@@ -397,30 +461,7 @@ export const ChallengeView: FC<{
           alignItems: "center",
         }}
       >
-        <Button
-          className="btn"
-          fullWidth
-          variant="contained"
-          size="large"
-          disabled={isLoading || joined}
-          sx={{
-            backgroundColor: "#3eb718",
-            mt: 1,
-          }}
-          onClick={() => joinFTChallenge()}
-        >
-          {isLoading ? (
-            <CircularProgress size={24} />
-          ) : joined ? (
-            <>
-              <CheckCircleOutlineIcon sx={{ mr: 1 }} />
-              Joined
-            </>
-          ) : (
-            "Join"
-          )}
-        </Button>
-        {joined && (
+        {/* {joined && (
           <Button
             className="btn"
             fullWidth
@@ -435,7 +476,7 @@ export const ChallengeView: FC<{
           >
             Leave
           </Button>
-        )}
+        )} */}
 
         <Button
           className="btn"
@@ -470,23 +511,6 @@ export const ChallengeView: FC<{
           onClick={() => cancelGame()}
         >
           Cancel Game
-        </Button>
-
-        <Button
-          className="btn"
-          fullWidth
-          variant="contained"
-          size="large"
-          disabled={isLoading}
-          sx={{
-            mt: 1,
-          }}
-          onClick={() => {
-            setChallengeId(0);
-            setDisplayConfetti(false);
-          }}
-        >
-          Back
         </Button>
       </Box>
 
