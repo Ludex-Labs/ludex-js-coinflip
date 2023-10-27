@@ -41,7 +41,7 @@ export const ChallengeView: FC<{
     setChallengeId,
     setDisplayConfetti,
   } = props;
-  const [gameLoaded, setGameLoading] = useState<boolean>(false);
+  const [gameLoading, setGameLoading] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [challenge, setChallenge] = useState<any>(undefined);
   const [players, setPlayers] = useState<any>(undefined);
@@ -49,6 +49,10 @@ export const ChallengeView: FC<{
   useEffect(() => {
     getChallenge(challengeId);
   }, []);
+
+  useEffect(() => {
+    if (gameLoading) setTimeout(() => getChallenge(challengeId), 3000);
+  }, [gameLoading]);
 
   const getChallenge = async (challengeId: number) => {
     const response = await fetch(`/api/getChallenge`, {
@@ -76,7 +80,7 @@ export const ChallengeView: FC<{
         }),
       });
       const res = await response.json();
-      if (res?.code >= 300) throw res;
+      if (res?.code >= 300 || response?.status >= 300) throw res;
       const tx = Transaction.from(Buffer.from(res?.transaction, "base64"));
       const sig = await sendTransaction(tx);
       if (!sig.toString().includes("Error")) {
@@ -84,6 +88,7 @@ export const ChallengeView: FC<{
         else toast.success("Challenge joined!");
         console.info("sig: ", sig);
       }
+      setTimeout(() => getChallenge(challengeId), 3000);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(error.message);
@@ -138,7 +143,6 @@ export const ChallengeView: FC<{
         }),
       });
       const res = await response.json();
-      getChallenge(challengeId);
       if (res?.code >= 300) throw res;
       if (res?.winner && res?.winner === wallet?.publicKey?.toString()) {
         toast.success(`You won!`);
@@ -152,6 +156,7 @@ export const ChallengeView: FC<{
       console.error(error);
     } finally {
       setGameLoading(false);
+      getChallenge(challengeId);
     }
   };
 
@@ -172,9 +177,6 @@ export const ChallengeView: FC<{
       console.error(error);
     }
   };
-
-  const challengeReady =
-    challenge?.state === "CREATED" || challenge?.state === "LOCKED";
 
   const challengeCancelled =
     challenge?.state === "CANCELED" || challenge?.state === "CANCELING";
@@ -468,22 +470,39 @@ export const ChallengeView: FC<{
         </Button>
       </Box>
 
-      <Dialog open={gameLoaded} className="invisible">
+      <Dialog open={gameLoading} className="invisible">
         <DialogContent>
-          <Lottie
-            options={{
-              loop: true,
-              autoplay: true,
-              animationData: flip,
-              rendererSettings: {
-                preserveAspectRatio: "xMidYMid slice",
-              },
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "column",
+              overflow: "hidden",
             }}
-            height={400}
-            width={400}
-            isStopped={!gameLoaded}
-            isPaused={!gameLoaded}
-          />
+          >
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: flip,
+                rendererSettings: {
+                  preserveAspectRatio: "xMidYMid slice",
+                },
+              }}
+              height={400}
+              width={400}
+              isStopped={!gameLoading}
+              isPaused={!gameLoading}
+            />
+            <Button
+              onClick={() => {
+                setGameLoading(false);
+              }}
+            >
+              Close
+            </Button>
+          </Box>
         </DialogContent>
       </Dialog>
     </Box>
