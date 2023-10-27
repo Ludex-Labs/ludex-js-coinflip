@@ -159,14 +159,17 @@ function App() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ payoutId: payoutId }),
             });
-            console.log("response", response);
-            const res = await response.json();
-            if (res?.error) throw res.error;
-            setChallengeId(res);
+            console.info('status', response.status)
+            const responseBody = await response.json();
+            console.info("responseBody", responseBody);
+            if (response.status >= 300)
+              throw new Error(responseBody.message);
+
+            setChallengeId(responseBody);
             return;
           } catch (e) {
             if (e) toast.error(e?.toString());
-            console.error(e);
+            // console.error(e);
             throw e;
           }
         })()

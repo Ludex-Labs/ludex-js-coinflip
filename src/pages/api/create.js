@@ -11,9 +11,7 @@ async function waitForChallengeCreation(challengeId) {
   let challenge = null;
   while (challenge === null || challenge.blockchainAddress === null) {
     await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds before making the next API call
-    challenge = await challengeAPI.getChallenge({
-      challengeId: challengeId,
-    });
+    challenge = await challengeAPI.getChallenge(challengeId);
   }
   return challenge;
 }
@@ -25,8 +23,7 @@ export default async function handler(req, res) {
     const challengeOnChain = await challengeAPI.createChallenge({
       payoutId: payoutId,
     });
-
-    var blockchainAddress = challengeOnChain?.blockchainAddress;
+    let blockchainAddress = challengeOnChain?.blockchainAddress;
     // Non shelf challenges must wait for blockchainAddress
     if (challengeOnChain?.blockchainAddress === null) {
       const _challenge = await waitForChallengeCreation(
@@ -37,8 +34,13 @@ export default async function handler(req, res) {
 
     res.json(challengeOnChain?.challengeId);
   } catch (error) {
-    console.log("error", error?.message);
-    console.log("error data", error?.message?.data);
-    res.json({ error: error });
+    if (error.response.status >= 300) {
+      res.status(error.response.status).json(error?.response?.data);
+    }
+    else {
+      // console.log("error", error?.message);
+      // console.log("error data", error?.message?.data);
+      res.status(400).json(error);
+    }
   }
 }
