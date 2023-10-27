@@ -121,6 +121,46 @@ function App() {
     toast.success("Logged out!");
   };
 
+<<<<<<< HEAD
+=======
+  const createChallenge = async () => {
+    await toast.promise(
+      Promise.resolve(
+        (async () => {
+          try {
+            const response = await fetch(`/api/create`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ payoutId: payoutId }),
+            });
+            console.info('status', response.status)
+            const responseBody = await response.json();
+            console.info("responseBody", responseBody);
+            if (response.status >= 300)
+              throw new Error(responseBody.message);
+
+            setChallengeId(responseBody);
+            return;
+          } catch (e) {
+            if (e) toast.error(e?.toString());
+            // console.error(e);
+            throw e;
+          }
+        })()
+      ),
+      {
+        loading: "Creating challenge...",
+        success: "Challenge created!",
+        error: "Error creating challenge",
+      }
+    );
+  };
+
+  const challengeList = hideCompleted
+    ? challenges.filter((challenges) => challenges.state === "CREATED")
+    : challenges;
+
+>>>>>>> be50604b20c28cd9be569011f73d5e0dd97161e6
   return (
     <Box className=" bg">
       <Toaster />
