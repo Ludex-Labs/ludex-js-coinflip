@@ -7,12 +7,12 @@ const challengeAPI = new Ludex.ClientScoped(process.env.LUDEX_KEY, {
 export default async function handler(req, res) {
   const { challengeId, playerPubkey } = req.body;
   try {
-    const tx = await challengeAPI.generateJoin({
+    const response = await challengeAPI.generateJoin({
       challengeId: challengeId,
       playerPubkey: playerPubkey,
       gasless: true,
     });
-    res.json(tx);
+    res.json(response);
   } catch (error) {
     console.log(error?.response?.data);
     res.status(error?.response?.data?.code).json(error?.response?.data);
