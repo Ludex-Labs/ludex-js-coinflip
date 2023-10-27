@@ -65,7 +65,9 @@ export const ChallengeView: FC<{
 
   const joinFTChallenge = async (leave: boolean) => {
     try {
-      const response = await fetch(`/api/` + leave ? "leave" : "join", {
+      var url = "/api/join";
+      if (leave) url = "/api/leave";
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -78,33 +80,8 @@ export const ChallengeView: FC<{
       const tx = Transaction.from(Buffer.from(res?.transaction, "base64"));
       const sig = await sendTransaction(tx);
       if (!sig.toString().includes("Error")) {
-        toast.success("Challenge " + "leave" ? "left!" : "joined!");
-        console.info("sig: ", sig);
-      }
-    } catch (error) {
-      // @ts-ignore
-      if (error?.message) toast.error(error.message);
-      else toast.error(JSON.stringify(error));
-      console.error(error);
-    }
-  };
-
-  const leaveFTChallenge = async () => {
-    try {
-      const response = await fetch(`/api/leave`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          challengeId: challengeId,
-          playerPubkey: wallet.publicKey.toBase58(),
-        }),
-      });
-      const res = await response.json();
-      if (res?.code >= 300) throw res;
-      const tx = Transaction.from(Buffer.from(res?.transaction, "base64"));
-      const sig = await sendTransaction(tx);
-      if (!sig.toString().includes("Error")) {
-        toast.success("Challenge left!");
+        if (leave) toast.success("Challenge left!");
+        else toast.success("Challenge joined!");
         console.info("sig: ", sig);
       }
     } catch (error) {
@@ -160,24 +137,21 @@ export const ChallengeView: FC<{
           challengeId: challenge?.id,
         }),
       });
-      console.log("response", response);
-
       const res = await response.json();
       getChallenge(challengeId);
-      setGameLoading(false);
-      console.log("res", res);
-      // if (res?.status !== 200) throw new Error("Something went wrong...");
-      if (res?.error) toast.error(res?.error?.toString());
+      if (res?.code >= 300) throw res;
       if (res?.winner && res?.winner === wallet?.publicKey?.toString()) {
         toast.success(`You won!`);
         setDisplayConfetti(true);
       } else if (res?.winner && res?.winner !== wallet?.publicKey?.toString())
         toast.success("You lost.");
-    } catch (e) {
+    } catch (error) {
+      // @ts-ignore
+      if (error?.message) toast.error(error.message);
+      else toast.error(JSON.stringify(error));
+      console.error(error);
+    } finally {
       setGameLoading(false);
-      console.error(e);
-      if (e) toast.error(e?.toString());
-      throw e;
     }
   };
 
@@ -365,11 +339,11 @@ export const ChallengeView: FC<{
               }}
             >
               <Button
-                onClick={() => joinFTChallenge(true)}
+                onClick={() => joinFTChallenge(false)}
                 fullWidth
                 disabled={isLoading}
                 sx={
-                  players.length > 0
+                  players?.length > 0
                     ? {
                         textAlign: "center",
                         width: "100%",
@@ -386,7 +360,7 @@ export const ChallengeView: FC<{
               >
                 {isLoading ? (
                   <CircularProgress size={24} />
-                ) : players.length > 0 ? (
+                ) : players?.length > 0 ? (
                   players[0]?.substring(0, 25) + "..."
                 ) : (
                   "Join"
@@ -405,7 +379,7 @@ export const ChallengeView: FC<{
               </Box>
 
               <Button
-                onClick={() => joinFTChallenge(true)}
+                onClick={() => joinFTChallenge(false)}
                 fullWidth
                 sx={
                   players.length > 1
@@ -480,7 +454,7 @@ export const ChallengeView: FC<{
         </Button>
 
         <Button
-          onClick={() => joinFTChallenge(false)}
+          onClick={() => joinFTChallenge(true)}
           className="btn"
           fullWidth
           variant="contained"
