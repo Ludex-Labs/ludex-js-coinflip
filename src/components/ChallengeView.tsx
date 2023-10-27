@@ -63,9 +63,9 @@ export const ChallengeView: FC<{
     setPlayers(challenge?.players);
   };
 
-  const joinFTChallenge = async () => {
+  const joinFTChallenge = async (leave: boolean) => {
     try {
-      const response = await fetch(`/api/join`, {
+      const response = await fetch(`/api/` + leave ? "leave" : "join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -78,7 +78,7 @@ export const ChallengeView: FC<{
       const tx = Transaction.from(Buffer.from(res?.transaction, "base64"));
       const sig = await sendTransaction(tx);
       if (!sig.toString().includes("Error")) {
-        toast.success("Challenge joined!");
+        toast.success("Challenge " + "leave" ? "left!" : "joined!");
         console.info("sig: ", sig);
       }
     } catch (error) {
@@ -365,7 +365,7 @@ export const ChallengeView: FC<{
               }}
             >
               <Button
-                onClick={() => joinFTChallenge()}
+                onClick={() => joinFTChallenge(true)}
                 fullWidth
                 disabled={isLoading}
                 sx={
@@ -405,7 +405,7 @@ export const ChallengeView: FC<{
               </Box>
 
               <Button
-                onClick={() => joinFTChallenge()}
+                onClick={() => joinFTChallenge(true)}
                 fullWidth
                 sx={
                   players.length > 1
@@ -480,6 +480,7 @@ export const ChallengeView: FC<{
         </Button>
 
         <Button
+          onClick={() => joinFTChallenge(false)}
           className="btn"
           fullWidth
           variant="contained"
@@ -488,7 +489,6 @@ export const ChallengeView: FC<{
           sx={{
             mt: 1,
           }}
-          onClick={() => leaveFTChallenge()}
         >
           Leave
         </Button>
