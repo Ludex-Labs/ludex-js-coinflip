@@ -134,7 +134,7 @@ function ChallengesView(props: any) {
             >
               <CircularProgress />
             </Box>
-          ) : challengeList.length === 0 ? (
+          ) : challengeList?.length === 0 ? (
             <div
               style={{
                 height: "100%",
