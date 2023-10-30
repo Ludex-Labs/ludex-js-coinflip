@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { ChallengeView } from "./ChallengeView";
+import { PayoutView } from "./PayoutView";
 import { RPC } from "./Solana/RPC";
 import { WalletSolana } from "./Solana/WalletSolana";
 import { Connection } from "@solana/web3.js";
@@ -9,6 +10,7 @@ import Image from "next/image";
 import Confetti from "react-confetti";
 import Lottie from "react-lottie";
 import * as coin from "./animations/coin.json";
+import ChallengesView from "./ChallengesView";
 
 // Web3Auth
 import { Web3Auth } from "@web3auth/modal";
@@ -18,7 +20,6 @@ import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
 // MUI
 import WalletIcon from "@mui/icons-material/Wallet";
 import { Box, Button, Typography } from "@mui/material";
-import ChallengesView from "./ChallengesView";
 
 function App() {
   const [viewWallet, setViewWallet] = useState<boolean>(false);
@@ -30,9 +31,8 @@ function App() {
     null
   );
   const [challengeId, setChallengeId] = useState<number>(0);
+  const [payoutId, setPayoutId] = useState<number>(0);
   const [displayConfetti, setDisplayConfetti] = useState<boolean>(false);
-
-  const payoutId = 91;
 
   useEffect(() => {
     const initWeb3Auth = async () => {
@@ -201,6 +201,8 @@ function App() {
               changeNetwork={changeNetwork}
               logout={logout}
             />
+          ) : payoutId === 0 && provider && connection && connection != null ? (
+            <PayoutView setPayoutId={setPayoutId} />
           ) : challengeId === 0 &&
             provider &&
             connection &&
@@ -208,6 +210,7 @@ function App() {
             <ChallengesView
               payoutId={payoutId}
               setChallengeId={setChallengeId}
+              setPayoutId={setPayoutId}
             />
           ) : provider && connection && challengeId !== 0 ? (
             <ChallengeView

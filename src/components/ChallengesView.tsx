@@ -11,9 +11,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 function ChallengesView(props: any) {
-  const { payoutId, setChallengeId } = props;
+  const { payoutId, setChallengeId, setPayoutId } = props;
   const [loading, setLoading] = useState<boolean>(false);
   const [challenges, setChallenges] = useState<any[]>([]);
   const [hideCompleted, setHideCompleted] = useState<boolean>(true);
@@ -74,6 +75,23 @@ function ChallengesView(props: any) {
       </Typography>
 
       <Box sx={{ position: "relative" }}>
+        <IconButton
+          size="small"
+          onClick={() => {
+            setPayoutId(0);
+          }}
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            position: "absolute",
+            top: "-20px",
+            left: "-20px",
+            background: "#374151",
+            border: "1px solid #6b727e",
+          }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
         <IconButton
           size="small"
           onClick={() => {
