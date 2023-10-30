@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         },
       ],
     });
-    res.json({ winner: winnerAddress });
+    res.json({ winnerAddress: winnerAddress });
   } catch (error) {
     console.log(error?.response?.data);
     res.status(error?.response?.data?.code).json(error?.response?.data);

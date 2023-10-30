@@ -1,13 +1,11 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { FC, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-// import { Challenge } from "@ludex-labs/ludex-sdk-js";
-//import { Wallet } from "@ludex-labs/ludex-sdk-js/web3/solana/utils";
 import { Connection, Transaction } from "@solana/web3.js";
 import { SolanaWallet } from "@web3auth/solana-provider";
 import { SafeEventEmitterProvider } from "@web3auth/base";
 import Lottie from "react-lottie";
 import * as flip from "./animations/flip.json";
+import Image from "next/image";
 
 // MUI
 import {
@@ -44,15 +42,19 @@ export const ChallengeView: FC<{
   const [gameLoading, setGameLoading] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [challenge, setChallenge] = useState<any>(undefined);
-  const [players, setPlayers] = useState<any>(undefined);
 
+  // GET the challenge every 5 seconds
   useEffect(() => {
-    getChallenge(challengeId);
-  }, []);
+    const fetchChallenge = () => {
+      getChallenge(challengeId);
+    };
 
-  useEffect(() => {
-    if (gameLoading) setTimeout(() => getChallenge(challengeId), 3000);
-  }, [gameLoading]);
+    fetchChallenge();
+    const intervalId = setInterval(fetchChallenge, 5000);
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [challengeId]);
 
   const getChallenge = async (challengeId: number) => {
     const response = await fetch(`/api/getChallenge`, {
@@ -64,7 +66,6 @@ export const ChallengeView: FC<{
     });
     const challenge = await response.json();
     setChallenge(challenge);
-    setPlayers(challenge?.players);
   };
 
   const joinFTChallenge = async (leave: boolean) => {
@@ -144,11 +145,13 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
-      if (res?.winner && res?.winner === wallet?.publicKey?.toString()) {
-        toast.success(`You won!`);
+      if (
+        res?.winnerAddress &&
+        res?.winnerAddress === wallet?.publicKey?.toString()
+      ) {
+        toast.success(`You won! It will take a few seconds to payout.`);
         setDisplayConfetti(true);
-      } else if (res?.winner && res?.winner !== wallet?.publicKey?.toString())
-        toast.success("You lost.");
+      } else toast.success("You lost... better luck next time!");
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(error.message);
@@ -169,21 +172,21 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
-      else setChallengeId(res?.id);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(error.message);
       else toast.error(JSON.stringify(error));
       console.error(error);
+    } finally {
+      getChallenge(challengeId);
     }
   };
-
-  const challengeCancelled =
-    challenge?.state === "CANCELED" || challenge?.state === "CANCELING";
 
   if (!challenge) {
     return <CircularProgress />;
   }
+
+  const { players, payout, blockchainAddress, limit, state } = challenge;
 
   return (
     <Box
@@ -196,7 +199,7 @@ export const ChallengeView: FC<{
         variant={"h5"}
         sx={{ mb: 2, display: "flex", justifyContent: "center" }}
       >
-        Challenge {challengeId?.toString()}
+        Challenge {challengeId}
       </Typography>
 
       <Box sx={{ position: "relative" }}>
@@ -255,7 +258,7 @@ export const ChallengeView: FC<{
             }}
           >
             <span>State</span>
-            <span>{challenge?.state}</span>
+            <span>{state}</span>
           </Box>
           <Box
             sx={{
@@ -268,17 +271,16 @@ export const ChallengeView: FC<{
               target="_blank"
               rel="noreferrer"
               href={
-                challenge?.payout?.chain === "SOLANA"
+                payout?.chain === "SOLANA"
                   ? "https://solscan.io/account/" +
-                    challenge?.blockchainAddress +
+                    blockchainAddress +
                     "?cluster=devnet"
-                  : challenge?.payout?.chain === "AVALANCHE"
-                  ? "'https://testnet.snowtrace.io/'" +
-                    challenge?.blockchainAddress
+                  : payout?.chain === "AVALANCHE"
+                  ? "'https://testnet.snowtrace.io/'" + blockchainAddress
                   : ""
               }
             >
-              {challenge?.blockchainAddress?.substring(0, 15)}...
+              {blockchainAddress?.substring(0, 15)}...
             </a>
           </Box>
           <Divider sx={{ mt: 1, mb: 1 }} />
@@ -290,7 +292,7 @@ export const ChallengeView: FC<{
             }}
           >
             <span>Chain</span>
-            <span>{challenge?.payout?.chain}</span>
+            <span>{payout?.chain}</span>
           </Box>
           <Box
             sx={{
@@ -299,7 +301,18 @@ export const ChallengeView: FC<{
             }}
           >
             <span>Entry Fee</span>
-            <span>{challenge?.payout?.uiValues?.entryFee}</span>
+            <span>
+              {payout?.uiValues?.entryFee}
+              <Image
+                alt="SOL"
+                src={"/SOL.svg"}
+                width={12}
+                height={12}
+                style={{
+                  marginLeft: "5px",
+                }}
+              />
+            </span>
           </Box>
           <Box
             sx={{
@@ -307,17 +320,20 @@ export const ChallengeView: FC<{
               justifyContent: "space-between",
             }}
           >
-            <span>Mediator Rake</span>
-            <span>{challenge?.payout?.uiValues?.mediatorRake}</span>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
-            <span>Provider Rake</span>
-            <span>{challenge?.payout?.uiValues?.providerRake}</span>
+            <span>Total Rake</span>
+            <span>
+              {parseFloat(payout?.uiValues?.providerRake) +
+                parseFloat(payout?.uiValues?.mediatorRake)}
+              <Image
+                alt="SOL"
+                src={"/SOL.svg"}
+                width={12}
+                height={12}
+                style={{
+                  marginLeft: "5px",
+                }}
+              />
+            </span>
           </Box>
 
           <Divider sx={{ mt: 1, mb: 1 }} />
@@ -330,7 +346,7 @@ export const ChallengeView: FC<{
             }}
           >
             <Box sx={{ mb: 1 }}>
-              Players ({players?.length}/{challenge?.limit})
+              Players ({players?.length}/{limit})
             </Box>
 
             <Box
@@ -343,7 +359,7 @@ export const ChallengeView: FC<{
               <Button
                 onClick={() => joinFTChallenge(false)}
                 fullWidth
-                disabled={isLoading}
+                disabled={isLoading || state !== "CREATED"}
                 sx={
                   players?.length > 0
                     ? {
@@ -383,6 +399,7 @@ export const ChallengeView: FC<{
               <Button
                 onClick={() => joinFTChallenge(false)}
                 fullWidth
+                disabled={isLoading || state !== "CREATED"}
                 sx={
                   players.length > 1
                     ? {
@@ -425,12 +442,7 @@ export const ChallengeView: FC<{
           fullWidth
           variant="contained"
           size="large"
-          // disabled={
-          //   isLoading ||
-          //   // players?.length !== 2 ||
-          //   !challengeReady ||
-          //   players.includes(wallet.publicKey.toBase58())
-          // }
+          disabled={isLoading || (state !== "CREATED" && state !== "LOCKED")}
           sx={{
             backgroundColor: "#3eb718",
             mt: 1,
@@ -445,7 +457,13 @@ export const ChallengeView: FC<{
           fullWidth
           variant="contained"
           size="large"
-          disabled={isLoading || challengeCancelled}
+          disabled={
+            isLoading ||
+            state !== "CANCELED" ||
+            state !== "CANCELING" ||
+            state !== "RESOLVED" ||
+            state !== "RESOLVING"
+          }
           sx={{
             backgroundColor: "#f45252",
             mt: 1,
@@ -455,19 +473,21 @@ export const ChallengeView: FC<{
           Cancel
         </Button>
 
-        <Button
-          onClick={() => joinFTChallenge(true)}
-          className="btn"
-          fullWidth
-          variant="contained"
-          size="large"
-          disabled={isLoading || !players.includes(wallet.publicKey.toBase58())}
-          sx={{
-            mt: 1,
-          }}
-        >
-          Leave
-        </Button>
+        {players.includes(wallet.publicKey.toBase58()) && (
+          <Button
+            onClick={() => joinFTChallenge(true)}
+            className="btn"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={isLoading}
+            sx={{
+              mt: 1,
+            }}
+          >
+            Leave
+          </Button>
+        )}
       </Box>
 
       <Dialog open={gameLoading} className="invisible">

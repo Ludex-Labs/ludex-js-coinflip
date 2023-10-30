@@ -9,12 +9,8 @@ import {
   Box,
   Button,
   FormControl,
-  IconButton,
-  InputAdornment,
   InputLabel,
-  MenuItem,
   OutlinedInput,
-  Select,
   Typography,
 } from "@mui/material";
 
@@ -29,8 +25,6 @@ export const WalletSolana: FC<{
   const { provider, publicKey, isMainnet, connection, changeNetwork, logout } =
     props;
   const [balanceSOL, setBalanceSOL] = useState<number | undefined>(undefined);
-  const [balanceWSOL, setBalanceWSOL] = useState<number | undefined>(undefined);
-  const [balanceUSDC, setBalanceUSDC] = useState<number | undefined>(undefined);
 
   const getBalance = async () => {
     if (!provider) {
@@ -48,31 +42,21 @@ export const WalletSolana: FC<{
     } else setBalanceSOL(parseInt(_balance) / 10 ** 9);
 
     // Get WSOL balance
-    const tokenAccounts = await viewTokenAccounts(
-      provider,
-      publicKey,
-      connection
-    );
-
-    const WSOLAccount = tokenAccounts?.value?.find((tokenAccount) => {
-      if (
-        tokenAccount?.account?.data?.parsed?.info?.mint ===
-        "So11111111111111111111111111111111111111112"
-      )
-        return tokenAccount;
-    });
-    setBalanceWSOL(
-      WSOLAccount?.account?.data?.parsed?.info?.tokenAmount?.uiAmount
-    );
-
-    // // Get USDC Balance
-    // const USDCAccount = tokenAccounts?.value?.find(
-    //   (tokenAccount) =>
-    //     tokenAccount?.account?.data?.parsed?.info?.mint ===
-    //     "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    // const tokenAccounts = await viewTokenAccounts(
+    //   provider,
+    //   publicKey,
+    //   connection
     // );
-    // setBalanceUSDC(
-    //   USDCAccount?.account?.data?.parsed?.info?.tokenAmount?.uiAmount
+
+    // const WSOLAccount = tokenAccounts?.value?.find((tokenAccount) => {
+    //   if (
+    //     tokenAccount?.account?.data?.parsed?.info?.mint ===
+    //     "So11111111111111111111111111111111111111112"
+    //   )
+    //     return tokenAccount;
+    // });
+    // setBalanceWSOL(
+    //   WSOLAccount?.account?.data?.parsed?.info?.tokenAmount?.uiAmount
     // );
   };
 
@@ -105,42 +89,6 @@ export const WalletSolana: FC<{
           fullWidth
         />
       </FormControl>
-
-      <FormControl size="small" fullWidth sx={{ width: "100%", mb: 2 }}>
-        <InputLabel>WSOL Balance</InputLabel>
-        <OutlinedInput
-          value={balanceWSOL ? balanceWSOL?.toString() + " WSOL" : ""}
-          label="WSOL Balance"
-          disabled
-          fullWidth
-        />
-      </FormControl>
-
-      {/* <FormControl size="small" fullWidth sx={{ width: "100%", mb: 2 }}>
-        <InputLabel>USDC Balance</InputLabel>
-        <OutlinedInput
-          value={balanceUSDC ? balanceUSDC?.toString() + " USDC" : ""}
-          label="USDC Balance"
-          disabled
-          fullWidth
-        />
-      </FormControl> */}
-
-      {/* <FormControl size="small" fullWidth sx={{ mb: 2 }}>
-        <InputLabel>Network</InputLabel>
-        <Select
-          value={isMainnet ? "mainnet" : "devnet"}
-          label="Network"
-          onChange={(e) =>
-            e.target.value === "mainnet"
-              ? changeNetwork("mainnet")
-              : changeNetwork("devnet")
-          }
-        >
-          <MenuItem value={"devnet"}>Devnet</MenuItem>
-          <MenuItem value={"mainnet"}>Mainnet</MenuItem>
-        </Select>
-      </FormControl> */}
 
       <Box style={{ width: "100%" }}>
         {isMainnet ? (
@@ -180,7 +128,12 @@ export const WalletSolana: FC<{
           </Button>
         )}
 
-        <Button className="btn" variant="contained" onClick={() => logout()}>
+        <Button
+          color="error"
+          className="btn"
+          variant="contained"
+          onClick={() => logout()}
+        >
           Logout
         </Button>
       </Box>
