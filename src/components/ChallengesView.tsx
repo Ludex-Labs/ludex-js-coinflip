@@ -19,7 +19,7 @@ function ChallengesView(props: any) {
   const [hideCompleted, setHideCompleted] = useState<boolean>(true);
 
   const challengeList = hideCompleted
-    ? challenges.filter((challenges) => challenges.state === "CREATED")
+    ? challenges?.filter((challenges) => challenges.state === "CREATED")
     : challenges;
 
   useEffect(() => {
@@ -36,7 +36,7 @@ function ChallengesView(props: any) {
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
-      setChallenges(res);
+      setChallenges(res.challenges);
       setLoading(false);
     } catch (error) {
       // @ts-ignore

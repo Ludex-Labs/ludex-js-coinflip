@@ -459,10 +459,10 @@ export const ChallengeView: FC<{
           size="large"
           disabled={
             isLoading ||
-            state !== "CANCELED" ||
-            state !== "CANCELING" ||
-            state !== "RESOLVED" ||
-            state !== "RESOLVING"
+            state === "CANCELED" ||
+            state === "CANCELING" ||
+            state === "RESOLVED" ||
+            state === "RESOLVING"
           }
           sx={{
             backgroundColor: "#f45252",
