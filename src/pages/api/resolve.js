@@ -23,9 +23,6 @@ export default async function handler(req, res) {
   const providerRakeBN = new BN(providerRake);
   const amount = entryBN.sub(mediatorRakeBN).sub(providerRakeBN).toString();
 
-  console.log("---------------------------------------------");
-  console.log("amount", amount);
-
   try {
     await challengeAPI.resolveChallenge({
       challengeId,
