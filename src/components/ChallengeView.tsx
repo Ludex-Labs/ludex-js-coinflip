@@ -188,6 +188,8 @@ export const ChallengeView: FC<{
 
   const { players, payout, blockchainAddress, limit, state } = challenge;
 
+  console.log("payout", payout?.chain);
+
   return (
     <Box
       sx={{
@@ -301,18 +303,30 @@ export const ChallengeView: FC<{
             }}
           >
             <span>Entry Fee</span>
-            <span>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+              }}
+            >
               {payout?.uiValues?.entryFee}
               <Image
                 alt="SOL"
-                src={"/SOL.svg"}
-                width={12}
-                height={12}
+                src={
+                  payout?.chain === "SOLANA"
+                    ? "/SOL.svg"
+                    : payout?.chain === "AVALANCHE"
+                    ? "/AVAX.svg"
+                    : ""
+                }
+                width={18}
+                height={18}
                 style={{
                   marginLeft: "5px",
                 }}
               />
-            </span>
+            </Box>
           </Box>
           <Box
             sx={{
@@ -321,19 +335,31 @@ export const ChallengeView: FC<{
             }}
           >
             <span>Total Rake</span>
-            <span>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+              }}
+            >
               {parseFloat(payout?.uiValues?.providerRake) +
                 parseFloat(payout?.uiValues?.mediatorRake)}
               <Image
-                alt="SOL"
-                src={"/SOL.svg"}
-                width={12}
-                height={12}
+                alt="Crypto"
+                src={
+                  payout?.chain === "SOLANA"
+                    ? "/SOL.svg"
+                    : payout?.chain === "AVALANCHE"
+                    ? "/AVAX.svg"
+                    : ""
+                }
+                width={18}
+                height={18}
                 style={{
                   marginLeft: "5px",
                 }}
               />
-            </span>
+            </Box>
           </Box>
 
           <Divider sx={{ mt: 1, mb: 1 }} />
