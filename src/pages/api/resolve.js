@@ -21,7 +21,8 @@ export default async function handler(req, res) {
   const entryBN = new BN(entryFee);
   const mediatorRakeBN = new BN(mediatorRake);
   const providerRakeBN = new BN(providerRake);
-  const amount = entryBN.sub(mediatorRakeBN).sub(providerRakeBN).toString();
+  const amountPerPlayer = entryBN.sub(mediatorRakeBN).sub(providerRakeBN);
+  const amount = amountPerPlayer.mul(new BN(players.length)).toString();
 
   try {
     await challengeAPI.resolveChallenge({
