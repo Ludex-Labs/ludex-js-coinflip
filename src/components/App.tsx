@@ -126,7 +126,11 @@ function App() {
       <Toaster />
 
       {displayConfetti && (
-        <Confetti numberOfPieces={400} style={{ width: "100%" }} />
+        <Confetti
+          numberOfPieces={400}
+          gravity={0.8}
+          style={{ width: "100%" }}
+        />
       )}
 
       <Box className="container-page">
@@ -188,7 +192,7 @@ function App() {
                   color: "#FFFFFF",
                 }}
               >
-                on Solana Devnet
+                on Devnet
               </Typography>
             </Box>
           )}

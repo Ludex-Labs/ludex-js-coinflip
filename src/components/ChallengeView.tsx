@@ -4,7 +4,7 @@ import { Connection, Transaction } from "@solana/web3.js";
 import { SolanaWallet } from "@web3auth/solana-provider";
 import { SafeEventEmitterProvider } from "@web3auth/base";
 import Lottie from "react-lottie";
-import * as flip from "./animations/flip.json";
+import * as flipAnimation from "./animations/animation.json";
 import Image from "next/image";
 
 // MUI
@@ -39,8 +39,9 @@ export const ChallengeView: FC<{
     setChallengeId,
     setDisplayConfetti,
   } = props;
-  const [gameLoading, setGameLoading] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [playAnimation, setPlayAnimation] = useState<boolean>(false);
+  const [animationPlayed, setAnimationPlayed] = useState<boolean>(false);
   const [challenge, setChallenge] = useState<any>(undefined);
 
   // GET the challenge every 5 seconds
@@ -67,6 +68,30 @@ export const ChallengeView: FC<{
     const challenge = await response.json();
     setChallenge(challenge);
   };
+
+  const displayAnimation = async (winnerAddress: string) => {
+    setAnimationPlayed(true);
+    setPlayAnimation(true);
+    setTimeout(() => {
+      setPlayAnimation(false);
+      if (winnerAddress === wallet?.publicKey?.toString()) {
+        toast.success(`You won!`);
+        setDisplayConfetti(true);
+      } else
+        toast.success("Player " + winnerAddress.substring(0, 10) + " won!");
+    }, 3000);
+  };
+
+  // GET the challenge every 5 seconds
+  useEffect(() => {
+    if (challenge && challenge?.winnings?.length > 0 && !animationPlayed) {
+      const winnerAddress = challenge?.winnings.find((winning: any) => {
+        return winning.amount !== "0";
+      })?.to;
+      displayAnimation(winnerAddress);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [challenge]);
 
   const joinFTChallenge = async (leave: boolean) => {
     try {
@@ -133,7 +158,7 @@ export const ChallengeView: FC<{
   };
 
   const startGame = async () => {
-    setGameLoading(true);
+    setIsLoading(true);
 
     try {
       const response = await fetch(`/api/resolve`, {
@@ -145,20 +170,14 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
-      if (
-        res?.winnerAddress &&
-        res?.winnerAddress === wallet?.publicKey?.toString()
-      ) {
-        toast.success(`You won! It will take a few seconds to payout.`);
-        setDisplayConfetti(true);
-      } else toast.success("You lost... better luck next time!");
+      displayAnimation(res?.winnerAddress);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(error.message);
       else toast.error(JSON.stringify(error));
       console.error(error);
     } finally {
-      setGameLoading(false);
+      setIsLoading(false);
       getChallenge(challengeId);
     }
   };
@@ -187,8 +206,6 @@ export const ChallengeView: FC<{
   }
 
   const { players, payout, blockchainAddress, limit, state } = challenge;
-
-  console.log("payout", payout?.chain);
 
   return (
     <Box
@@ -506,7 +523,7 @@ export const ChallengeView: FC<{
             fullWidth
             variant="contained"
             size="large"
-            disabled={isLoading}
+            disabled={isLoading || state !== "CREATED"}
             sx={{
               mt: 1,
             }}
@@ -516,7 +533,7 @@ export const ChallengeView: FC<{
         )}
       </Box>
 
-      <Dialog open={gameLoading} className="invisible">
+      <Dialog open={playAnimation} className="invisible">
         <DialogContent>
           <Box
             sx={{
@@ -529,25 +546,19 @@ export const ChallengeView: FC<{
           >
             <Lottie
               options={{
-                loop: true,
+                loop: false,
                 autoplay: true,
-                animationData: flip,
+                animationData: flipAnimation,
                 rendererSettings: {
                   preserveAspectRatio: "xMidYMid slice",
                 },
               }}
               height={400}
               width={400}
-              isStopped={!gameLoading}
-              isPaused={!gameLoading}
+              isStopped={!playAnimation}
+              isPaused={!playAnimation}
             />
-            <Button
-              onClick={() => {
-                setGameLoading(false);
-              }}
-            >
-              Close
-            </Button>
+            <Button onClick={() => setPlayAnimation(false)}>Close</Button>
           </Box>
         </DialogContent>
       </Dialog>
