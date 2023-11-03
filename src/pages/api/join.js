@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const response = await challengeAPI.generateJoin({
       challengeId: challengeId,
       playerPubkey: playerPubkey,
-      gasless: true,
+      gasless: false,
     });
     res.json(response.data);
   } catch (error) {

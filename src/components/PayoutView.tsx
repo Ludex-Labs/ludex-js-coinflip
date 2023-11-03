@@ -50,7 +50,7 @@ export const PayoutView: FC<{
           Solana
         </Button>
         <Button
-          onClick={() => setPayoutId(96)}
+          onClick={() => setPayoutId(95)}
           variant="outlined"
           sx={{
             display: "flex",
