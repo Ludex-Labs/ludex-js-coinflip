@@ -52,6 +52,7 @@ function App() {
             loginMethodsOrder: ["google"],
             appLogo: "https://ludex.gg/logo/logo.svg",
           },
+          web3AuthNetwork: "cyan",
         });
         setWeb3auth(web3auth);
         const openloginAdapter = new OpenloginAdapter({
