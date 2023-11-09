@@ -31,7 +31,7 @@ a {
 
 .container-page {
   z-index: 1;
-  max-width: 450px;
+  max-width: 350px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -133,8 +133,7 @@ a {
 }
 
 .MuiPaper-root {
-  background: #374151;
-  border-radius: 15px;
+  margin: 0px;
 }
 
 /* -------------------------- background -------------------------- */
@@ -153,6 +152,7 @@ a {
     #353840 51%,
     #0e0f11 100%
   );
+
   -webkit-animation: AnimateBG 20s ease infinite;
   animation: AnimateBG 20s ease infinite;
 }

@@ -9,24 +9,39 @@ import {
   FormGroup,
   FormControlLabel,
   CircularProgress,
+  Switch,
+  Tooltip,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useWeb3Auth } from "../services/web3auth";
+import Image from "next/image";
 
-function ChallengesView(props: any) {
-  const { payoutId, setChallengeId, setPayoutId } = props;
+interface IProps {
+  setChallengeId: (challengeId: number) => void;
+}
+
+export function ChallengesView({ setChallengeId }: IProps) {
+  const { chain } = useWeb3Auth();
+
   const [loading, setLoading] = useState<boolean>(false);
   const [challenges, setChallenges] = useState<any[]>([]);
   const [hideCompleted, setHideCompleted] = useState<boolean>(true);
+  const [isNative, setIsNative] = useState<boolean>(true);
 
   const challengeList = hideCompleted
     ? challenges?.filter((challenges) => challenges.state === "CREATED")
     : challenges;
 
+  var payoutId = 0;
+  if (chain === "AVALANCHE" && isNative) payoutId = 96;
+  else if (chain === "AVALANCHE" && !isNative) payoutId = 98;
+  else if (chain === "SOLANA" && isNative) payoutId = 91;
+  else if (chain === "SOLANA" && !isNative) payoutId = 64;
+
   useEffect(() => {
     getChallenges(payoutId);
     // eslint-disable-next-line
-  }, []);
+  }, [isNative]);
 
   const getChallenges = async (_payoutId: number) => {
     try {
@@ -47,12 +62,12 @@ function ChallengesView(props: any) {
     }
   };
 
-  const createChallenge = async () => {
+  const createChallenge = async (_payoutId: number) => {
     try {
       const response = await fetch(`/api/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payoutId: payoutId }),
+        body: JSON.stringify({ payoutId: _payoutId }),
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
@@ -65,37 +80,69 @@ function ChallengesView(props: any) {
     }
   };
 
+  const onClickChallenge = async (challengeId: number) => {
+    setChallengeId(challengeId);
+  };
+
   return (
     <Box sx={{ width: "100%" }}>
       <Typography
         variant={"h5"}
         sx={{ mb: 2, display: "flex", justifyContent: "center" }}
       >
-        Challenges
+        Select Challenge
       </Typography>
+
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
+        <Tooltip title="Fungible Token Challenge">
+          <IconButton onClick={() => setIsNative(false)}>
+            <Image
+              alt="Non-Native"
+              src={
+                chain === "SOLANA"
+                  ? "/WSOL.png"
+                  : chain === "AVALANCHE"
+                  ? "/USDC.png"
+                  : ""
+              }
+              width={30}
+              height={30}
+            />
+          </IconButton>
+        </Tooltip>
+
+        <Switch checked={isNative} onChange={() => setIsNative(!isNative)} />
+
+        <Tooltip title="Native Challenge">
+          <IconButton onClick={() => setIsNative(true)}>
+            <Image
+              alt="Native"
+              src={
+                chain === "SOLANA"
+                  ? "/SOL.svg"
+                  : chain === "AVALANCHE"
+                  ? "/AVAX.svg"
+                  : ""
+              }
+              width={30}
+              height={30}
+            />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
       <Box sx={{ position: "relative" }}>
         <IconButton
           size="small"
           onClick={() => {
-            setPayoutId(0);
-          }}
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            position: "absolute",
-            top: "-20px",
-            left: "-20px",
-            background: "#374151",
-            border: "1px solid #6b727e",
-          }}
-        >
-          <ArrowBackIcon />
-        </IconButton>
-        <IconButton
-          size="small"
-          onClick={() => {
-            toast.success("Fetching challenges!");
+            toast.success("Refetching challenges!");
             getChallenges(payoutId);
           }}
           sx={{
@@ -150,7 +197,7 @@ function ChallengesView(props: any) {
               <Box
                 key={challenge?.id}
                 onClick={() => {
-                  setChallengeId(challenge?.id);
+                  onClickChallenge(challenge?.id);
                 }}
                 sx={{
                   display: "flex",
@@ -171,8 +218,9 @@ function ChallengesView(props: any) {
           )}
         </Box>
       </Box>
-
-      <FormGroup sx={{ display: "flex", justifyContent: "center" }}>
+      <FormGroup
+        sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+      >
         <FormControlLabel
           sx={{ m: 0 }}
           control={
@@ -186,7 +234,7 @@ function ChallengesView(props: any) {
       </FormGroup>
 
       <Button
-        onClick={() => createChallenge()}
+        onClick={() => createChallenge(payoutId)}
         className="btn"
         variant="contained"
         sx={{ mt: 2, backgroundColor: "#3eb718" }}

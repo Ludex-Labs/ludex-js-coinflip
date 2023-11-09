@@ -1,11 +1,10 @@
 import { FC, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { Connection, Transaction } from "@solana/web3.js";
-import { SolanaWallet } from "@web3auth/solana-provider";
-import { SafeEventEmitterProvider } from "@web3auth/base";
+import { Transaction } from "@solana/web3.js";
 import Lottie from "react-lottie";
 import * as flipAnimation from "./animations/animation.json";
 import Image from "next/image";
+import { useWeb3Auth } from "../services/web3auth";
 
 // MUI
 import {
@@ -22,27 +21,27 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export const ChallengeView: FC<{
-  provider: SafeEventEmitterProvider | null;
-  wallet?: any;
-  isMainnet: boolean;
-  connection: Connection;
   challengeId: number;
   setChallengeId: (challengeId: number) => void;
-  setDisplayConfetti: (displayConfetti: boolean) => void;
 }> = (props) => {
-  const {
-    provider,
-    wallet,
-    isMainnet,
-    connection,
-    challengeId,
-    setChallengeId,
-    setDisplayConfetti,
-  } = props;
+  const { challengeId, setChallengeId } = props;
+
+  const { getAccounts, signAndSendTransaction, chain } = useWeb3Auth();
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [playAnimation, setPlayAnimation] = useState<boolean>(false);
   const [animationPlayed, setAnimationPlayed] = useState<boolean>(false);
   const [challenge, setChallenge] = useState<any>(undefined);
+  const [account, setAccount] = useState<string>("");
+
+  const getAccount = async () => {
+    const accounts = await getAccounts();
+    setAccount(accounts[0]);
+  };
+
+  useEffect(() => {
+    getAccount();
+  }, []);
 
   // GET the challenge every 5 seconds
   useEffect(() => {
@@ -67,6 +66,8 @@ export const ChallengeView: FC<{
     });
     const challenge = await response.json();
     setChallenge(challenge);
+    if (challenge.state.includes("ING")) setIsLoading(true);
+    else setIsLoading(false);
   };
 
   const displayAnimation = async (winnerAddress: string) => {
@@ -74,9 +75,8 @@ export const ChallengeView: FC<{
     setPlayAnimation(true);
     setTimeout(() => {
       setPlayAnimation(false);
-      if (winnerAddress === wallet?.publicKey?.toString()) {
+      if (winnerAddress === account) {
         toast.success(`You won!`);
-        setDisplayConfetti(true);
       } else
         toast.success("Player " + winnerAddress.substring(0, 10) + " won!");
     }, 3000);
@@ -88,12 +88,14 @@ export const ChallengeView: FC<{
       const winnerAddress = challenge?.winnings.find((winning: any) => {
         return winning.amount !== "0";
       })?.to;
-      displayAnimation(winnerAddress);
+      if (winnerAddress) displayAnimation(winnerAddress);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [challenge]);
 
-  const joinFTChallenge = async (leave: boolean) => {
+  const joinChallenge = async (leave: boolean) => {
+    setIsLoading(true);
+
     try {
       var url = "/api/join";
       if (leave) url = "/api/leave";
@@ -102,59 +104,40 @@ export const ChallengeView: FC<{
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           challengeId: challengeId,
-          playerPubkey: wallet.publicKey.toBase58(),
+          playerPubkey: account,
         }),
       });
       const res = await response.json();
       if (res?.code >= 300 || response?.status >= 300) throw res;
-      const tx = Transaction.from(Buffer.from(res?.transaction, "base64"));
-      const sig = await sendTransaction(tx);
-      if (!sig.toString().includes("Error")) {
-        if (leave) toast.success("Challenge left!");
-        else toast.success("Challenge joined!");
-        console.info("sig: ", sig);
-      }
+      if (chain === "SOLANA") await sendSOLtx(res?.transaction, leave);
+      else if (chain === "AVALANCHE") await sendAVAXtx(res?.transaction);
+
       setTimeout(() => getChallenge(challengeId), 3000);
     } catch (error) {
       // @ts-ignore
-      if (error?.message) toast.error(error.message);
+      if (error?.message) toast.error(JSON.stringify(error.message));
       else toast.error(JSON.stringify(error));
       console.error(error);
-    }
-  };
-
-  const sendTransaction = async (tx: Transaction) => {
-    if (!provider) return "";
-    try {
-      setIsLoading(true);
-      const solanaWallet = new SolanaWallet(provider);
-      tx = await solanaWallet.signTransaction(tx);
-      const sig = await connection.sendRawTransaction(tx.serialize());
-      return sig;
-    } catch (error) {
-      let errorString = (error as any)?.logs
-        ? error + " --- LOGS --- " + ((error as any)?.logs).toString()
-        : error?.toString();
-      verifyError(errorString, tx);
-      return errorString ? errorString : "";
     } finally {
       setIsLoading(false);
     }
   };
 
-  const verifyError = (error: any, tx: Transaction) => {
-    console.error(error);
-    if (error?.includes("Blockhash not found")) {
-      setTimeout(() => sendTransaction(tx), 2000);
-    } else if (error?.includes("Error Code: ChallengeFull")) {
-      toast.error("Challenge is already full.");
-    } else if (error?.includes("already in use")) {
-      toast.error("This address is already joined.");
-    } else if (error?.includes("no record of a prior credit")) {
-      toast.error("You don't have enough credit.");
-    } else if (error?.includes("User rejected the request")) {
-      toast.error("Player rejected the request.");
-    } else toast.error("Transaction failed.");
+  const sendAVAXtx = async (tx: string) => {
+    const decodedTx = Buffer.from(tx, "base64").toString("utf-8");
+    const transactions = JSON.parse(decodedTx);
+
+    for (const transaction of transactions) {
+      const res = await signAndSendTransaction(transaction);
+      console.log("res: ", res);
+    }
+  };
+
+  const sendSOLtx = async (tx: string, leave: boolean) => {
+    const transaction = Transaction.from(Buffer.from(tx, "base64"));
+    const sig = await signAndSendTransaction(transaction);
+    if (sig && leave) toast.success("Challenge left!");
+    if (sig) toast.success("Challenge joined!");
   };
 
   const startGame = async () => {
@@ -210,8 +193,7 @@ export const ChallengeView: FC<{
   return (
     <Box
       sx={{
-        width: "300px",
-        minWidth: "300px",
+        width: "100%",
       }}
     >
       <Typography
@@ -226,7 +208,6 @@ export const ChallengeView: FC<{
           size="small"
           onClick={() => {
             setChallengeId(0);
-            setDisplayConfetti(false);
           }}
           sx={{
             display: "flex",
@@ -243,7 +224,7 @@ export const ChallengeView: FC<{
         <IconButton
           size="small"
           onClick={() => {
-            toast.success("Fetching challenge!");
+            toast.success("Refetching challenge!");
             getChallenge(challengeId);
           }}
           sx={{
@@ -279,30 +260,32 @@ export const ChallengeView: FC<{
             <span>State</span>
             <span>{state}</span>
           </Box>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
-            <span>Address</span>
-            <a
-              target="_blank"
-              rel="noreferrer"
-              href={
-                payout?.chain === "SOLANA"
-                  ? "https://solscan.io/account/" +
-                    blockchainAddress +
-                    "?cluster=devnet"
-                  : payout?.chain === "AVALANCHE"
-                  ? "'https://testnet.snowtrace.io/'" + blockchainAddress
-                  : ""
-              }
+
+          {chain === "SOLANA" && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+              }}
             >
-              {blockchainAddress?.substring(0, 15)}...
-            </a>
-          </Box>
-          <Divider sx={{ mt: 1, mb: 1 }} />
+              <span>Address</span>
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href={
+                  payout?.chain === "SOLANA"
+                    ? "https://solscan.io/account/" +
+                      blockchainAddress +
+                      "?cluster=devnet"
+                    : payout?.chain === "AVALANCHE"
+                    ? "'https://testnet.snowtrace.io/'" + blockchainAddress
+                    : ""
+                }
+              >
+                {blockchainAddress?.substring(0, 15)}...
+              </a>
+            </Box>
+          )}
 
           <Box
             sx={{
@@ -311,8 +294,43 @@ export const ChallengeView: FC<{
             }}
           >
             <span>Chain</span>
-            <span>{payout?.chain}</span>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                alt="SOL"
+                src={
+                  payout?.chain === "SOLANA"
+                    ? "/SOL.svg"
+                    : payout?.chain === "AVALANCHE"
+                    ? "/AVAX.svg"
+                    : ""
+                }
+                width={18}
+                height={18}
+                style={{
+                  marginRight: "7px",
+                }}
+              />
+              {payout?.chain}
+            </Box>
           </Box>
+
+          <Divider sx={{ mt: 1, mb: 1 }} />
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <span>Payout ID</span>
+            <span>{payout?.id}</span>
+          </Box>
+
           <Box
             sx={{
               display: "flex",
@@ -327,22 +345,7 @@ export const ChallengeView: FC<{
                 alignItems: "center",
               }}
             >
-              {payout?.uiValues?.entryFee}
-              <Image
-                alt="SOL"
-                src={
-                  payout?.chain === "SOLANA"
-                    ? "/SOL.svg"
-                    : payout?.chain === "AVALANCHE"
-                    ? "/AVAX.svg"
-                    : ""
-                }
-                width={18}
-                height={18}
-                style={{
-                  marginLeft: "5px",
-                }}
-              />
+              {payout?.uiValues?.entryFee} {payout?.mint?.ticker}
             </Box>
           </Box>
           <Box
@@ -360,22 +363,8 @@ export const ChallengeView: FC<{
               }}
             >
               {parseFloat(payout?.uiValues?.providerRake) +
-                parseFloat(payout?.uiValues?.mediatorRake)}
-              <Image
-                alt="Crypto"
-                src={
-                  payout?.chain === "SOLANA"
-                    ? "/SOL.svg"
-                    : payout?.chain === "AVALANCHE"
-                    ? "/AVAX.svg"
-                    : ""
-                }
-                width={18}
-                height={18}
-                style={{
-                  marginLeft: "5px",
-                }}
-              />
+                parseFloat(payout?.uiValues?.mediatorRake)}{" "}
+              {payout?.mint?.ticker}
             </Box>
           </Box>
 
@@ -400,7 +389,7 @@ export const ChallengeView: FC<{
               }}
             >
               <Button
-                onClick={() => joinFTChallenge(false)}
+                onClick={() => joinChallenge(false)}
                 fullWidth
                 disabled={isLoading || state !== "CREATED"}
                 sx={
@@ -410,6 +399,14 @@ export const ChallengeView: FC<{
                         width: "100%",
                         border: "3px solid #fff",
                         mb: 1,
+                      }
+                    : isLoading || state !== "CREATED"
+                    ? {
+                        textAlign: "center",
+                        width: "100%",
+                        border: "3px dotted #fff",
+                        mb: 1,
+                        opacity: 0.5,
                       }
                     : {
                         textAlign: "center",
@@ -440,7 +437,7 @@ export const ChallengeView: FC<{
               </Box>
 
               <Button
-                onClick={() => joinFTChallenge(false)}
+                onClick={() => joinChallenge(false)}
                 fullWidth
                 disabled={isLoading || state !== "CREATED"}
                 sx={
@@ -450,6 +447,14 @@ export const ChallengeView: FC<{
                         width: "100%",
                         border: "3px solid #fff",
                         mb: 1,
+                      }
+                    : isLoading || state !== "CREATED"
+                    ? {
+                        textAlign: "center",
+                        width: "100%",
+                        border: "3px dotted #fff",
+                        mb: 1,
+                        opacity: 0.5,
                       }
                     : {
                         textAlign: "center",
@@ -500,13 +505,7 @@ export const ChallengeView: FC<{
           fullWidth
           variant="contained"
           size="large"
-          disabled={
-            isLoading ||
-            state === "CANCELED" ||
-            state === "CANCELING" ||
-            state === "RESOLVED" ||
-            state === "RESOLVING"
-          }
+          disabled={isLoading || (state !== "CREATED" && state !== "LOCKED")}
           sx={{
             backgroundColor: "#f45252",
             mt: 1,
@@ -516,9 +515,9 @@ export const ChallengeView: FC<{
           Cancel
         </Button>
 
-        {players.includes(wallet.publicKey.toBase58()) && (
+        {players.includes(account) && (
           <Button
-            onClick={() => joinFTChallenge(true)}
+            onClick={() => joinChallenge(true)}
             className="btn"
             fullWidth
             variant="contained"
@@ -533,8 +532,18 @@ export const ChallengeView: FC<{
         )}
       </Box>
 
-      <Dialog open={playAnimation} className="invisible">
-        <DialogContent>
+      <Dialog
+        open={playAnimation}
+        className="invisible"
+        sx={{
+          margin: 0,
+        }}
+      >
+        <DialogContent
+          sx={{
+            margin: 0,
+          }}
+        >
           <Box
             sx={{
               display: "flex",
