@@ -3,7 +3,7 @@ import { CHAIN_CONFIG_TYPE } from "./config/chainConfig";
 import { Web3AuthProvider } from "./services/web3auth";
 import { Box } from "@mui/material";
 import { Toaster } from "react-hot-toast";
-// import Lottie from "react-lottie";
+import Lottie from "react-lottie";
 import * as coin from "./components/animations/coin.json";
 import Main from "./components/Main";
 
@@ -16,7 +16,7 @@ function App() {
         <Toaster />
 
         <Box className="container-page">
-          {/* <Lottie
+          <Lottie
             options={{
               loop: true,
               autoplay: true,
@@ -34,7 +34,7 @@ function App() {
               top: 0,
               zIndex: -1,
             }}
-          /> */}
+          />
           <Main setChain={setChain} />
         </Box>
       </Box>
