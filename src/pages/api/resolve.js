@@ -2,7 +2,7 @@ import { Ludex } from "@ludex-labs/ludex-sdk-js";
 const BN = require("bn.js");
 
 const challengeAPI = new Ludex.ClientScoped(process.env.LUDEX_KEY, {
-  baseUrl: process.env.REACT_APP_PROTOCOL_API,
+  baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
 }).challenge;
 
 function flipCoin(players) {
