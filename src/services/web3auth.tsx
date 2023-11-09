@@ -101,7 +101,8 @@ export const Web3AuthProvider: FunctionComponent<IWeb3AuthState> = ({
         setIsLoading(true);
         const web3AuthInstance = new Web3Auth({
           chainConfig: currentChainConfig,
-          clientId: process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID!,
+          clientId:
+            "BDLLvEo-r5ABRmodTBkPZiX0JFILQmX9nZCzGmBBN9_nVHkvr5poqiz0qQ0L34s6Hl7r3_mXcldULhTX1iroe8I",
           uiConfig: {
             defaultLanguage: "en",
           },
