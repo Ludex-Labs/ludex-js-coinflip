@@ -14,8 +14,7 @@ export const WalletView: FC<{
   setDisplayWallet: (displayWallet: boolean) => void;
 }> = (props) => {
   const { setDisplayWallet } = props;
-  const { logout, getAccounts, getBalance, chain, signTransaction } =
-    useWeb3Auth();
+  const { logout, getAccounts, getBalance, chain } = useWeb3Auth();
 
   const [accounts, setAccounts] = useState<string[]>([]);
   const [balance, setBalance] = useState<number | null>(null);
@@ -41,6 +40,7 @@ export const WalletView: FC<{
 
   useEffect(() => {
     getAccountDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

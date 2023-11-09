@@ -41,6 +41,7 @@ export const ChallengeView: FC<{
 
   useEffect(() => {
     getAccount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // GET the challenge every 5 seconds
