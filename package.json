@@ -1,6 +1,6 @@
 {
   "name": "ludex-js-coinflip",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,33 +10,30 @@
     "debug-backend": "Go to run & debug, press play... (launche.json)"
   },
   "dependencies": {
-    "@emotion/react": "^11.10.6",
-    "@emotion/styled": "^11.10.6",
-    "@ludex-labs/ludex-sdk-js": "^1.11.5",
-    "@mui/icons-material": "^5.11.16",
-    "@mui/material": "^5.12.1",
-    "@solana/spl-token": "^0.3.7",
-    "@solana/web3.js": "^1.75.0",
-    "@types/node": "18.16.0",
-    "@types/react": "18.2.0",
-    "@types/react-dom": "18.2.0",
-    "@walletconnect/client": "^1.8.0",
-    "@web3auth/base": "^5.1.0",
-    "@web3auth/modal": "^5.1.1",
-    "@web3auth/solana-provider": "^5.1.1",
-    "bs58": "^5.0.0",
-    "eslint": "8.39.0",
-    "eslint-config-next": "13.3.1",
-    "next": "13.3.1",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@ludex-labs/ludex-sdk-js": "file:../ludex-sdk-js",
+    "@mui/icons-material": "^5.14.16",
+    "@mui/material": "^5.14.17",
+    "@web3auth/base": "^7.0.4",
+    "@web3auth/modal": "^7.0.5",
+    "ethers": "^6.8.1",
+    "next": "13.4.9",
     "react": "18.2.0",
     "react-confetti": "^6.1.0",
     "react-dom": "18.2.0",
-    "react-hot-toast": "^2.4.0",
+    "react-hot-toast": "^2.4.1",
     "react-lottie": "^1.2.3",
-    "react-scripts": "^5.0.1",
-    "typescript": "5.0.4"
+    "web3": "^4.1.1"
   },
   "devDependencies": {
-    "@types/react-lottie": "^1.2.6"
+    "@types/elliptic": "^6.4.14",
+    "@types/node": "20.4.1",
+    "@types/react": "18.2.14",
+    "@types/react-dom": "18.2.7",
+    "@types/react-lottie": "^1.2.9",
+    "eslint": "8.44.0",
+    "eslint-config-next": "13.4.9",
+    "typescript": "5.1.6"
   }
 }

@@ -1,10 +1,7 @@
 import Head from "next/head";
-import Image from "next/image";
-import { Inter } from "next/font/google";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import App from "../components/App";
-import dynamic from "next/dynamic";
+import App from "../App";
 
 const darkTheme = createTheme({
   palette: {
@@ -23,10 +20,7 @@ export default function Home() {
     <>
       <Head>
         <title>Coin Flip Challenge</title>
-        <meta
-          name="description"
-          content="Ludex coin flip challenge on Solana!"
-        />
+        <meta name="description" content="Ludex coin flip challenge!" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
 
