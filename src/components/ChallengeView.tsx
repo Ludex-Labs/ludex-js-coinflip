@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Transaction } from "@solana/web3.js";
-import Lottie from "react-lottie";
+// import Lottie from "react-lottie";
 import * as flipAnimation from "./animations/animation.json";
 import Image from "next/image";
 import { useWeb3Auth } from "../services/web3auth";
@@ -553,7 +553,7 @@ export const ChallengeView: FC<{
               overflow: "hidden",
             }}
           >
-            <Lottie
+            {/* <Lottie
               options={{
                 loop: false,
                 autoplay: true,
@@ -566,7 +566,7 @@ export const ChallengeView: FC<{
               width={400}
               isStopped={!playAnimation}
               isPaused={!playAnimation}
-            />
+            /> */}
             <Button onClick={() => setPlayAnimation(false)}>Close</Button>
           </Box>
         </DialogContent>
