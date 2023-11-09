@@ -33,10 +33,17 @@ export function ChallengesView({ setChallengeId }: IProps) {
     : challenges;
 
   var payoutId = 0;
-  if (chain === "AVALANCHE" && isNative) payoutId = 96;
-  else if (chain === "AVALANCHE" && !isNative) payoutId = 98;
-  else if (chain === "SOLANA" && isNative) payoutId = 91;
-  else if (chain === "SOLANA" && !isNative) payoutId = 64;
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    if (chain === "AVALANCHE" && isNative) payoutId = 96;
+    else if (chain === "AVALANCHE" && !isNative) payoutId = 98;
+    else if (chain === "SOLANA" && isNative) payoutId = 91;
+    else if (chain === "SOLANA" && !isNative) payoutId = 64;
+  } else {
+    if (chain === "AVALANCHE" && isNative) payoutId = 31;
+    else if (chain === "AVALANCHE" && !isNative) payoutId = 32;
+    else if (chain === "SOLANA" && isNative) payoutId = 28;
+    else if (chain === "SOLANA" && !isNative) payoutId = 19;
+  }
 
   useEffect(() => {
     getChallenges(payoutId);
