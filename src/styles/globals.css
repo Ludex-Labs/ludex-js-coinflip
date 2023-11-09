@@ -110,15 +110,15 @@ a {
 }
 
 .btn {
-  min-width: 100%;
+  min-width: 100% !important;
   width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-radius: 10px;
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px !important;
+  border-radius: 10px !important;
   max-width: 290px;
   box-shadow: #6b6b6b3d 0px 8px 16px 0px !important;
-  text-transform: none;
+  text-transform: none !important;
   font-weight: bold !important;
   font-family: Rubik !important;
   font-size: 15px !important;
