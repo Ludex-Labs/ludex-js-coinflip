@@ -91,6 +91,8 @@ export function ChallengesView({ setChallengeId }: IProps) {
     setChallengeId(challengeId);
   };
 
+  console.log("challengeList", challengeList);
+
   return (
     <Box sx={{ width: "100%" }}>
       <Typography

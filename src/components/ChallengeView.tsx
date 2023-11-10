@@ -67,7 +67,7 @@ export const ChallengeView: FC<{
     });
     const challenge = await response.json();
     setChallenge(challenge);
-    if (challenge.state.includes("ING")) setIsLoading(true);
+    if (challenge?.state?.includes("ING")) setIsLoading(true);
     else setIsLoading(false);
   };
 
@@ -442,7 +442,7 @@ export const ChallengeView: FC<{
                 fullWidth
                 disabled={isLoading || state !== "CREATED"}
                 sx={
-                  players.length > 1
+                  players?.length > 1
                     ? {
                         textAlign: "center",
                         width: "100%",
@@ -467,7 +467,7 @@ export const ChallengeView: FC<{
               >
                 {isLoading ? (
                   <CircularProgress size={24} />
-                ) : players.length > 1 ? (
+                ) : players?.length > 1 ? (
                   players[1]?.substring(0, 25) + "..."
                 ) : (
                   "Join"
@@ -516,7 +516,7 @@ export const ChallengeView: FC<{
           Cancel
         </Button>
 
-        {players.includes(account) && (
+        {players?.includes(account) && (
           <Button
             onClick={() => joinChallenge(true)}
             className="btn"
