@@ -36,11 +36,15 @@ export function ChallengesView({ setChallengeId }: IProps) {
   if (process.env.NEXT_PUBLIC_BASE_URL) {
     if (chain === "AVALANCHE" && isNative) payoutId = 96;
     else if (chain === "AVALANCHE" && !isNative) payoutId = 98;
+    else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 102;
+    else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 108;
     else if (chain === "SOLANA" && isNative) payoutId = 91;
     else if (chain === "SOLANA" && !isNative) payoutId = 64;
   } else {
     if (chain === "AVALANCHE" && isNative) payoutId = 31;
     else if (chain === "AVALANCHE" && !isNative) payoutId = 32;
+    else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 28;
+    else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 19;
     else if (chain === "SOLANA" && isNative) payoutId = 28;
     else if (chain === "SOLANA" && !isNative) payoutId = 19;
   }

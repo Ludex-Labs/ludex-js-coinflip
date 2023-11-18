@@ -37,34 +37,18 @@ const Setting = ({ setChain }: IProps) => {
               variant={chain === _chain ? "contained" : "outlined"}
               onClick={() => setChain(_chain as CHAIN_CONFIG_TYPE)}
               sx={{
-                m: 2,
-                p: 2,
-                width: "125px",
-                height: "125px",
+                m: 1.5,
+                mt: 4,
+                width: "110px",
+                height: "110px",
                 display: "flex",
                 flexDirection: "column",
               }}
             >
-              {_chain === "SOLANA" ? (
-                <Image
-                  alt="SOL"
-                  src={"/SOL.svg"}
-                  width={50}
-                  height={50}
-                  style={{
-                    marginLeft: "5px",
-                  }}
-                />
-              ) : _chain === "AVALANCHE" ? (
-                <Image
-                  alt="SOL"
-                  src={"/AVAX.svg"}
-                  width={50}
-                  height={50}
-                  style={{
-                    marginLeft: "5px",
-                  }}
-                />
+              {_chain.includes("SOLANA") ? (
+                <Image alt="SOL" src={"/SOL.svg"} width={50} height={50} />
+              ) : _chain.includes("AVALANCHE") ? (
+                <Image alt="SOL" src={"/AVAX.svg"} width={50} height={50} />
               ) : (
                 _chain
               )}

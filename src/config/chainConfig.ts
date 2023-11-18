@@ -10,6 +10,15 @@ export const CHAIN_CONFIG = {
     ticker: "SOL",
     tickerName: "Solana",
   } as CustomChainConfig,
+  SOLANA_MAINNET: {
+    chainNamespace: CHAIN_NAMESPACES.SOLANA,
+    rpcTarget: "https://rpc.ankr.com/solana",
+    blockExplorer: "https://solscan.io/",
+    chainId: "0x1",
+    displayName: "Solana Mainnet",
+    ticker: "SOL",
+    tickerName: "Solana",
+  } as CustomChainConfig,
   AVALANCHE: {
     chainNamespace: CHAIN_NAMESPACES.EIP155,
     rpcTarget: "https://api.avax-test.network/ext/bc/C/rpc",

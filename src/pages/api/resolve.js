@@ -14,27 +14,13 @@ export default async function handler(req, res) {
   const { challengeId } = req.body;
 
   var response = await challengeAPI.getChallenge(challengeId);
-  const { players, payout } = response.data;
-  const { entryFee, mediatorRake, providerRake } = payout;
-
+  const { players } = response.data;
   const winnerAddress = flipCoin(players);
-  const entryBN = new BN(entryFee);
-  const mediatorRakeBN = new BN(mediatorRake);
-  const providerRakeBN = new BN(providerRake);
-  const amountPerPlayer = entryBN.sub(mediatorRakeBN).sub(providerRakeBN);
-  const amount = amountPerPlayer.mul(new BN(players.length)).toString();
 
   try {
-    await challengeAPI.resolveChallenge({
-      challengeId,
-      payout: [
-        {
-          to: winnerAddress,
-          amount: amount,
-        },
-      ],
-    });
-    res.json({ winnerAddress: winnerAddress });
+    await challengeAPI
+      .resolveChallengeWithOneWinner(challengeId, winnerAddress)
+      .res.json({ winnerAddress: winnerAddress });
   } catch (error) {
     console.log(error?.response?.data);
     if (error?.response?.status) res.status(error?.response?.status);
