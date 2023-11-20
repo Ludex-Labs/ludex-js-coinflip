@@ -36,7 +36,7 @@ export const ChallengeView: FC<{
 
   const getAccount = async () => {
     const accounts = await getAccounts();
-    setAccount(accounts[0]);
+    if (accounts && accounts.length > 0) setAccount(accounts[0]);
   };
 
   useEffect(() => {
@@ -214,7 +214,19 @@ export const ChallengeView: FC<{
   };
 
   if (!challenge) {
-    return <CircularProgress />;
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   const { players, payout, blockchainAddress, limit, state } = challenge;
@@ -556,7 +568,7 @@ export const ChallengeView: FC<{
             }}
             onClick={() => joinChallengeWithHouse()}
           >
-            Join With House
+            Play Against House
           </Button>
         )}
 
