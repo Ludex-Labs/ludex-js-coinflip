@@ -124,6 +124,34 @@ export const ChallengeView: FC<{
     }
   };
 
+  const joinChallengeWithHouse = async () => {
+    setIsLoading(true);
+
+    try {
+      var url = "/api/joinWithHouse";
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: challengeId,
+        }),
+      });
+      const res = await response.json();
+      if (res?.code >= 300 || response?.status >= 300) throw res;
+      if (chain === "SOLANA") await sendSOLtx(res?.transaction, leave);
+      else if (chain === "AVALANCHE") await sendAVAXtx(res?.transaction);
+
+      setTimeout(() => getChallenge(challengeId), 3000);
+    } catch (error) {
+      // @ts-ignore
+      if (error?.message) toast.error(JSON.stringify(error.message));
+      else toast.error(JSON.stringify(error));
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const sendAVAXtx = async (tx: string) => {
     const decodedTx = Buffer.from(tx, "base64").toString("utf-8");
     const transactions = JSON.parse(decodedTx);
@@ -515,6 +543,22 @@ export const ChallengeView: FC<{
         >
           Cancel
         </Button>
+
+        {chain === "SOLANA" && (
+          <Button
+            className="btn"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={isLoading || (state !== "CREATED" && state !== "LOCKED")}
+            sx={{
+              mt: 1,
+            }}
+            onClick={() => joinChallengeWithHouse()}
+          >
+            Join With House
+          </Button>
+        )}
 
         {players?.includes(account) && (
           <Button
