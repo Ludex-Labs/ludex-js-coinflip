@@ -33,8 +33,6 @@ export const ChallengeView: FC<{
     setChallengeIdUpdated,
   } = props;
 
-  console.log("challengeIdUpdated", challengeIdUpdated);
-
   const { getAccounts, signAndSendTransaction, chain } = useWeb3Auth();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);

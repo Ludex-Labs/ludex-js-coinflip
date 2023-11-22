@@ -50,8 +50,6 @@ const Main = ({ setChain }: IProps) => {
     }
   };
 
-  console.log("challengeIdUpdated", challengeIdUpdated);
-
   const loggedInView = (
     <Box sx={{ width: "100%" }}>
       <Box
