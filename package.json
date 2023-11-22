@@ -25,6 +25,8 @@
     "react-dom": "18.2.0",
     "react-hot-toast": "^2.4.1",
     "react-lottie": "^1.2.3",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2",
     "web3": "^4.1.1"
   },
   "devDependencies": {

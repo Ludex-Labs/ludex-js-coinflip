@@ -15,12 +15,20 @@ export default async function handler(req, res) {
 
   var response = await challengeAPI.getChallenge(challengeId);
   const { players } = response.data;
+
+  console.log(players);
   const winnerAddress = flipCoin(players);
 
+  console.log(winnerAddress);
+
   try {
-    await challengeAPI
-      .resolveChallengeWithOneWinner(challengeId, winnerAddress)
-      .res.json({ winnerAddress: winnerAddress });
+    const res = await challengeAPI.resolveChallengeWithOneWinner({
+      challengeId: challengeId,
+      winner: winnerAddress,
+    });
+    console.log("res", res);
+
+    res.json({ winnerAddress: winnerAddress });
   } catch (error) {
     console.log(error?.response?.data);
     if (error?.response?.status) res.status(error?.response?.status);
