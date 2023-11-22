@@ -22,9 +22,18 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export const ChallengeView: FC<{
   challengeId: number;
+  challengeIdUpdated: number;
   setChallengeId: (challengeId: number) => void;
+  setChallengeIdUpdated: (challengeId: number) => void;
 }> = (props) => {
-  const { challengeId, setChallengeId } = props;
+  const {
+    challengeId,
+    setChallengeId,
+    challengeIdUpdated,
+    setChallengeIdUpdated,
+  } = props;
+
+  console.log("challengeIdUpdated", challengeIdUpdated);
 
   const { getAccounts, signAndSendTransaction, chain } = useWeb3Auth();
 
@@ -36,7 +45,7 @@ export const ChallengeView: FC<{
 
   const getAccount = async () => {
     const accounts = await getAccounts();
-    setAccount(accounts[0]);
+    if (accounts && accounts.length > 0) setAccount(accounts[0]);
   };
 
   useEffect(() => {
@@ -44,18 +53,13 @@ export const ChallengeView: FC<{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // GET the challenge every 5 seconds
   useEffect(() => {
-    const fetchChallenge = () => {
+    if (challengeIdUpdated === challengeId) {
       getChallenge(challengeId);
-    };
-
-    fetchChallenge();
-    const intervalId = setInterval(fetchChallenge, 5000);
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [challengeId]);
+      setChallengeIdUpdated(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [challengeIdUpdated]);
 
   const getChallenge = async (challengeId: number) => {
     const response = await fetch(`/api/getChallenge`, {
@@ -112,8 +116,32 @@ export const ChallengeView: FC<{
       if (res?.code >= 300 || response?.status >= 300) throw res;
       if (chain === "SOLANA") await sendSOLtx(res?.transaction, leave);
       else if (chain === "AVALANCHE") await sendAVAXtx(res?.transaction);
+    } catch (error) {
+      // @ts-ignore
+      if (error?.message) toast.error(JSON.stringify(error.message));
+      else toast.error(JSON.stringify(error));
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      setTimeout(() => getChallenge(challengeId), 3000);
+  const joinChallengeWithHouse = async () => {
+    setIsLoading(true);
+
+    try {
+      var url = "/api/joinWithHouse";
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: challengeId,
+        }),
+      });
+      const res = await response.json();
+      if (res?.code >= 300 || response?.status >= 300) throw res;
+      if (chain === "SOLANA") await sendSOLtx(res?.transaction, false);
+      else if (chain === "AVALANCHE") await sendAVAXtx(res?.transaction);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(JSON.stringify(error.message));
@@ -138,7 +166,7 @@ export const ChallengeView: FC<{
     const transaction = Transaction.from(Buffer.from(tx, "base64"));
     const sig = await signAndSendTransaction(transaction);
     if (sig && leave) toast.success("Challenge left!");
-    if (sig) toast.success("Challenge joined!");
+    else if (sig) toast.success("Challenge joined!");
   };
 
   const startGame = async () => {
@@ -186,7 +214,19 @@ export const ChallengeView: FC<{
   };
 
   if (!challenge) {
-    return <CircularProgress />;
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   const { players, payout, blockchainAddress, limit, state } = challenge;
@@ -515,6 +555,22 @@ export const ChallengeView: FC<{
         >
           Cancel
         </Button>
+
+        {chain === "SOLANA" && (
+          <Button
+            className="btn"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={isLoading || (state !== "CREATED" && state !== "LOCKED")}
+            sx={{
+              mt: 1,
+            }}
+            onClick={() => joinChallengeWithHouse()}
+          >
+            Play Against House
+          </Button>
+        )}
 
         {players?.includes(account) && (
           <Button
