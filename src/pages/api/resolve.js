@@ -26,8 +26,6 @@ export default async function handler(req, res) {
       challengeId: challengeId,
       winner: winnerAddress,
     });
-    console.log("res", res);
-
     res.json({ winnerAddress: winnerAddress });
   } catch (error) {
     console.log(error?.response?.data);
