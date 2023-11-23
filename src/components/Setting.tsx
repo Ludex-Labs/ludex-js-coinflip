@@ -48,7 +48,7 @@ const Setting = ({ setChain }: IProps) => {
               {_chain.includes("SOLANA") ? (
                 <Image alt="SOL" src={"/SOL.svg"} width={50} height={50} />
               ) : _chain.includes("AVALANCHE") ? (
-                <Image alt="SOL" src={"/AVAX.svg"} width={50} height={50} />
+                <Image alt="AVAX" src={"/AVAX.svg"} width={50} height={50} />
               ) : (
                 _chain
               )}
