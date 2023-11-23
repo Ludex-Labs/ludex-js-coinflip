@@ -25,7 +25,6 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
 
         <meta name="theme-color" content="#000000" />
-        <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
@@ -34,7 +33,6 @@ export default function Home() {
         <meta name="theme-color" content="#000000" />
 
         <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-        <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
         <meta property="og:image" content="/og_title.png" />
       </Head>
       <>

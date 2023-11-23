@@ -4,7 +4,7 @@ const SocketHandler = (req, res) => {
   const httpServer = res.socket.server;
   const { address, port } = httpServer.address();
   //const socketUrl = `http://${address}:${port}`;
-  const socketUrl = `https://coinflip.ludex.gg:${port}`;
+  const socketUrl = `https://ludex-coinflip-6c86cdc76821.herokuapp.com:${port}`;
   const io = httpServer.io;
 
   if (req.body) {
