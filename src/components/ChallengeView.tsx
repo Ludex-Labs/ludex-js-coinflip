@@ -22,16 +22,9 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export const ChallengeView: FC<{
   challengeId: number;
-  challengeIdUpdated: number;
   setChallengeId: (challengeId: number) => void;
-  setChallengeIdUpdated: (challengeId: number) => void;
 }> = (props) => {
-  const {
-    challengeId,
-    setChallengeId,
-    challengeIdUpdated,
-    setChallengeIdUpdated,
-  } = props;
+  const { challengeId, setChallengeId } = props;
 
   const { getAccounts, signAndSendTransaction, chain } = useWeb3Auth();
 
@@ -48,29 +41,46 @@ export const ChallengeView: FC<{
 
   useEffect(() => {
     getAccount();
+    getChallenge(challengeId, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // GET the challenge every 5 seconds
   useEffect(() => {
-    if (challengeIdUpdated === challengeId) {
-      getChallenge(challengeId);
-      setChallengeIdUpdated(0);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [challengeIdUpdated]);
+    const fetchChallenge = () => {
+      getChallenge(challengeId, false);
+    };
 
-  const getChallenge = async (challengeId: number) => {
-    const response = await fetch(`/api/getChallenge`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        challengeId: challengeId,
-      }),
-    });
-    const challenge = await response.json();
-    setChallenge(challenge);
-    if (challenge?.state?.includes("ING")) setIsLoading(true);
-    else setIsLoading(false);
+    fetchChallenge();
+    const intervalId = setInterval(fetchChallenge, 5000);
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [challengeId]);
+
+  const getChallenge = async (challengeId: number, force: boolean) => {
+    var _force = false;
+    if (force) _force = true;
+    const response = await fetch(
+      `/api/challenge?id=${challengeId}&force=${_force}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: undefined,
+      }
+    );
+
+    if (response.status === 204) return;
+    else if (response.status >= 300) {
+      toast.error("Error fetching challenge");
+      return;
+    } else {
+      const challenge = await response.json();
+      console.info("challenge", challenge);
+      setChallenge(challenge);
+      if (challenge?.state?.includes("ING")) setIsLoading(true);
+      else setIsLoading(false);
+    }
   };
 
   const displayAnimation = async (winnerAddress: string) => {
@@ -181,6 +191,7 @@ export const ChallengeView: FC<{
       const res = await response.json();
       if (res?.code >= 300) throw res;
       displayAnimation(res?.winnerAddress);
+      getChallenge(challengeId, true);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(error.message);
@@ -188,11 +199,11 @@ export const ChallengeView: FC<{
       console.error(error);
     } finally {
       setIsLoading(false);
-      getChallenge(challengeId);
     }
   };
 
   const cancelGame = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch(`/api/cancel`, {
         method: "POST",
@@ -201,13 +212,14 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
+      getChallenge(challengeId, true);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(error.message);
       else toast.error(JSON.stringify(error));
       console.error(error);
     } finally {
-      getChallenge(challengeId);
+      setIsLoading(false);
     }
   };
 
@@ -264,7 +276,7 @@ export const ChallengeView: FC<{
           size="small"
           onClick={() => {
             toast.success("Refetching challenge!");
-            getChallenge(challengeId);
+            getChallenge(challengeId, true);
           }}
           sx={{
             display: "flex",
