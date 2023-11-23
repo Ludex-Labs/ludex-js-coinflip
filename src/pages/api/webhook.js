@@ -3,7 +3,8 @@ import { Server } from "socket.io";
 const SocketHandler = (req, res) => {
   const httpServer = res.socket.server;
   const { address, port } = httpServer.address();
-  const socketUrl = `http://${address}:${port}`;
+  //const socketUrl = `http://${address}:${port}`;
+  const socketUrl = `https://coinflip.ludex.gg:${port}`;
   const io = httpServer.io;
 
   if (req.body) {
