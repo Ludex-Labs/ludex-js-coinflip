@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const { challengeId } = req.body;
 
   try {
-    const playerPrivKey = process.env.NEXT_PUBLIC_HOUSE_PRIVATE_KEY;
+    const playerPrivKey = process.env.HOUSE_PRIVATE_KEY;
     const decodedKey = bs58.decode(playerPrivKey);
     const secret = new Uint8Array(decodedKey);
     const account = Keypair.fromSecretKey(secret);
