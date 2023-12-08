@@ -15,13 +15,14 @@ import {
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useWeb3Auth } from "../services/web3auth";
 import Image from "next/image";
+import { Transaction, Keypair, Connection } from "@solana/web3.js";
 
 interface IProps {
   setChallengeId: (challengeId: number) => void;
 }
 
 export function ChallengesView({ setChallengeId }: IProps) {
-  const { chain } = useWeb3Auth();
+  const { chain, provider, signAndSendTransaction } = useWeb3Auth();
 
   const [loading, setLoading] = useState<boolean>(false);
   const [challenges, setChallenges] = useState<any[]>([]);
@@ -90,6 +91,22 @@ export function ChallengesView({ setChallengeId }: IProps) {
       console.error(error);
     }
   };
+
+  const sign = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const _tx = params.get("tx");
+    if (_tx) {
+      const decoded = decodeURIComponent(_tx);
+      console.log("decoded", decoded);
+      const transaction = Transaction.from(Buffer.from(decoded, "base64"));
+      console.log("transaction", transaction);
+      const sig = await signAndSendTransaction(transaction);
+      console.log("sig", sig);
+    }
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const _tx = params.get("tx");
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -248,6 +265,17 @@ export function ChallengesView({ setChallengeId }: IProps) {
       >
         Create New Challenge
       </Button>
+
+      {_tx && (
+        <Button
+          onClick={() => sign()}
+          className="btn"
+          variant="contained"
+          sx={{ mt: 2, backgroundColor: "#3eb718" }}
+        >
+          Sign Tx
+        </Button>
+      )}
     </Box>
   );
 }
