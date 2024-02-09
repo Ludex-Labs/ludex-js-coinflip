@@ -36,6 +36,7 @@ export function ChallengesView({ setChallengeId }: IProps) {
   var payoutId = 0;
   if (process.env.NEXT_PUBLIC_BASE_URL) {
     if (chain === "AVALANCHE" && isNative) payoutId = 96;
+    else if (chain === "AVALANCHE_MAINNET" && isNative) payoutId = 350;
     else if (chain === "AVALANCHE" && !isNative) payoutId = 98;
     else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 102;
     else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 108;
