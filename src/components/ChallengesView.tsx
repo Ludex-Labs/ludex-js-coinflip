@@ -132,7 +132,7 @@ export function ChallengesView({ setChallengeId }: IProps) {
               src={
                 chain === "SOLANA"
                   ? "/WSOL.png"
-                  : chain === "AVALANCHE"
+                  : chain === "AVALANCHE" || "AVALANCHE_MAINNET"
                   ? "/USDC.png"
                   : ""
               }
@@ -151,7 +151,7 @@ export function ChallengesView({ setChallengeId }: IProps) {
               src={
                 chain === "SOLANA"
                   ? "/SOL.svg"
-                  : chain === "AVALANCHE"
+                  : chain === "AVALANCHE" || "AVALANCHE_MAINNET"
                   ? "/AVAX.svg"
                   : ""
               }
