@@ -123,7 +123,7 @@ export const ChallengeView: FC<{
       const res = await response.json();
       if (res?.code >= 300 || response?.status >= 300) throw res;
       if (chain === "SOLANA") await sendSOLtx(res?.transaction, leave);
-      else if (chain === "AVALANCHE") await sendAVAXtx(res?.transaction);
+      else if (chain === "AVALANCHE"|| 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(JSON.stringify(error.message));
