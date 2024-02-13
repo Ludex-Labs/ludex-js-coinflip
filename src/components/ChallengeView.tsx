@@ -162,16 +162,18 @@ export const ChallengeView: FC<{
   };
 
   const sendAVAXtx = async (tx: string) => {
+    // const transactions = await parseTransaction(tx, Chain.AVALANCHE);
+    // const decodedTx = Buffer.from(tx, "base64").toString("utf-8");
+    // const transactions = JSON.parse(decodedTx);
+    // for (const transaction of transactions as Object[]) {
+    //   const res = await signAndSendTransaction(transaction);
+    //   console.log("res: ", res);
+    // }
+
     const transaction = await parseTransaction(tx, Chain.AVALANCHE);
     const res = await signAndSendTransaction(transaction);
     console.log("res: ", res);
 
-    // const decodedTx = Buffer.from(tx, "base64").toString("utf-8");
-    // const transactions = JSON.parse(decodedTx);
-    // for (const transaction of transactions) {
-    //   const res = await signAndSendTransaction(transaction);
-    //   console.log("res: ", res);
-    // }
   };
 
   const sendSOLtx = async (tx: String, leave: boolean) => {
