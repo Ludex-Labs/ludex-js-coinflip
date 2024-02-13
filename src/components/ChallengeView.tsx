@@ -5,6 +5,7 @@ import Lottie from "react-lottie";
 import * as flipAnimation from "./animations/animation.json";
 import Image from "next/image";
 import { useWeb3Auth } from "../services/web3auth";
+import { Chain, parseTransaction } from "@ludex-labs/ludex-sdk-js";
 
 // MUI
 import {
@@ -161,17 +162,21 @@ export const ChallengeView: FC<{
   };
 
   const sendAVAXtx = async (tx: string) => {
-    const decodedTx = Buffer.from(tx, "base64").toString("utf-8");
-    const transactions = JSON.parse(decodedTx);
+    const transaction = await parseTransaction(tx, Chain.AVALANCHE);
+    const res = await signAndSendTransaction(transaction);
+    console.log("res: ", res);
 
-    for (const transaction of transactions) {
-      const res = await signAndSendTransaction(transaction);
-      console.log("res: ", res);
-    }
+    // const decodedTx = Buffer.from(tx, "base64").toString("utf-8");
+    // const transactions = JSON.parse(decodedTx);
+    // for (const transaction of transactions) {
+    //   const res = await signAndSendTransaction(transaction);
+    //   console.log("res: ", res);
+    // }
   };
 
-  const sendSOLtx = async (tx: string, leave: boolean) => {
-    const transaction = Transaction.from(Buffer.from(tx, "base64"));
+  const sendSOLtx = async (tx: String, leave: boolean) => {
+    const transaction = await parseTransaction(tx, Chain.SOLANA );
+    // const transaction = Transaction.from(Buffer.from(tx, "base64"));
     const sig = await signAndSendTransaction(transaction);
     if (sig && leave) toast.success("Challenge left!");
     else if (sig) toast.success("Challenge joined!");
