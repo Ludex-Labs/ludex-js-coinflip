@@ -177,8 +177,8 @@ export const ChallengeView: FC<{
   };
 
   const sendSOLtx = async (tx: String, leave: boolean) => {
-    const transaction = await parseTransaction(tx, Chain.SOLANA );
-    // const transaction = Transaction.from(Buffer.from(tx, "base64"));
+    const decodedTx = await parseTransaction(tx, Chain.SOLANA );
+    const transaction = Transaction.from(decodedTx as Buffer);
     const sig = await signAndSendTransaction(transaction);
     if (sig && leave) toast.success("Challenge left!");
     else if (sig) toast.success("Challenge joined!");
