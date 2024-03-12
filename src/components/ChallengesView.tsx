@@ -19,9 +19,10 @@ import { Transaction, Keypair, Connection } from "@solana/web3.js";
 
 interface IProps {
   setChallengeId: (challengeId: number) => void;
+  isCypress?: boolean
 }
 
-export function ChallengesView({ setChallengeId }: IProps) {
+export function ChallengesView({ setChallengeId, isCypress }: IProps) {
   const { chain, provider, signAndSendTransaction } = useWeb3Auth();
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -94,6 +95,9 @@ export function ChallengesView({ setChallengeId }: IProps) {
   };
 
   const sign = async () => {
+    if(isCypress) {
+      return;
+    }
     const params = new URLSearchParams(window.location.search);
     const _tx = params.get("tx");
     if (_tx) {
@@ -106,8 +110,8 @@ export function ChallengesView({ setChallengeId }: IProps) {
     }
   };
 
-  const params = new URLSearchParams(window.location.search);
-  const _tx = params.get("tx");
+  const params = isCypress? null : new URLSearchParams(window.location.search);
+  const _tx = params?.get("tx");
 
   return (
     <Box sx={{ width: "100%" }}>

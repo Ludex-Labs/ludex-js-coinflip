@@ -9,9 +9,10 @@ import { WalletView } from "./WalletView";
 
 interface IProps {
   setChain: (chain: CHAIN_CONFIG_TYPE) => void;
+  isCypress?: boolean
 }
 
-const Main = ({ setChain }: IProps) => {
+const Main = ({ setChain, isCypress }: IProps) => {
   const [challengeId, setChallengeId] = useState<number>(0);
   const [displayWallet, setDisplayWallet] = useState<boolean>(false);
 
@@ -25,7 +26,7 @@ const Main = ({ setChain }: IProps) => {
         }}
       >
         {challengeId === 0 ? (
-          <ChallengesView setChallengeId={setChallengeId} />
+          <ChallengesView setChallengeId={setChallengeId} isCypress={isCypress} />
         ) : (
           <ChallengeView
             challengeId={challengeId}
@@ -69,7 +70,9 @@ const Main = ({ setChain }: IProps) => {
         width: "350px",
       }}
     >
-      {!provider ? (
+      
+      
+      {isCypress? loggedInView : !provider ? (
         unloggedInView
       ) : displayWallet ? (
         <WalletView setDisplayWallet={setDisplayWallet} />
