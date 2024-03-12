@@ -248,10 +248,11 @@ export const ChallengeView: FC<{
       }}
     >
       <Typography
+        id="challenge-heading"
         variant={"h5"}
         sx={{ mb: 2, display: "flex", justifyContent: "center" }}
       >
-        Challenge {challengeId}
+        Challenge <span id='challengeId'>{challengeId}</span>
       </Typography>
 
       <Box sx={{ position: "relative" }}>
@@ -309,7 +310,7 @@ export const ChallengeView: FC<{
             }}
           >
             <span>State</span>
-            <span>{state}</span>
+            <span id="challenge-state">{state}</span>
           </Box>
 
           {chain === "SOLANA" && (
