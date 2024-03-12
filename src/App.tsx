@@ -12,7 +12,7 @@ interface IProps {
 }
 
 function App({ isCypress }: IProps) {
-  const [chain, setChain] = useState<CHAIN_CONFIG_TYPE>("SOLANA");
+  const [chain, setChain] = useState<CHAIN_CONFIG_TYPE>("AVALANCHE");
 
   return (
     <Web3AuthProvider chain={chain}>
