@@ -147,7 +147,7 @@ export function ChallengesView({ setChallengeId, isCypress }: IProps) {
           </IconButton>
         </Tooltip>
 
-        <Switch checked={isNative} onChange={() => setIsNative(!isNative)} />
+        <Switch id={"chain-switch-btn"} checked={isNative} onChange={() => setIsNative(!isNative)} />
 
         <Tooltip title="Native Challenge">
           <IconButton onClick={() => setIsNative(true)}>
