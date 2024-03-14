@@ -119,7 +119,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
   const cypressSetChainHelper = (
     <Box>
         <Button
-        id= 'avax-mainnet-switch'
+        id= 'avax-devnet-switch'
         onClick={() => {setChain!('AVALANCHE')}}
         className="btn"
         variant="outlined"
