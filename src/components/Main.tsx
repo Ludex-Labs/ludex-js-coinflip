@@ -26,7 +26,7 @@ const Main = ({ setChain, isCypress }: IProps) => {
         }}
       >
         {challengeId === 0 ? (
-          <ChallengesView setChallengeId={setChallengeId} isCypress={isCypress} />
+          <ChallengesView setChallengeId={setChallengeId} isCypress={isCypress} setChain={setChain} />
         ) : (
           <ChallengeView
             challengeId={challengeId}

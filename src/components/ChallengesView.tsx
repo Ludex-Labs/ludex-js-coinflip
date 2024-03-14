@@ -16,13 +16,15 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import { useWeb3Auth } from "../services/web3auth";
 import Image from "next/image";
 import { Transaction, Keypair, Connection } from "@solana/web3.js";
+import { CHAIN_CONFIG_TYPE } from "../config/chainConfig";
 
 interface IProps {
   setChallengeId: (challengeId: number) => void;
+  setChain?: (chain: CHAIN_CONFIG_TYPE) => void;
   isCypress?: boolean
 }
 
-export function ChallengesView({ setChallengeId, isCypress }: IProps) {
+export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) {
   const { chain, provider, signAndSendTransaction } = useWeb3Auth();
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -36,9 +38,10 @@ export function ChallengesView({ setChallengeId, isCypress }: IProps) {
 
   var payoutId = 0;
   if (process.env.NEXT_PUBLIC_BASE_URL) {
-    if (chain === "AVALANCHE" && isNative) payoutId = 96;
-    else if (chain === "AVALANCHE_MAINNET" && isNative) payoutId = 350;
-    else if (chain === "AVALANCHE" && !isNative) payoutId = 98;
+    if (chain === "AVALANCHE" && isNative) payoutId = 386;
+    else if (chain === "AVALANCHE" && !isNative) payoutId = 379;
+    else if (chain === "AVALANCHE_MAINNET" && isNative) payoutId = 388;
+    else if (chain === "AVALANCHE_MAINNET" && !isNative) payoutId = 381;
     else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 102;
     else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 108;
     else if (chain === "SOLANA" && isNative) payoutId = 91;
@@ -113,8 +116,50 @@ export function ChallengesView({ setChallengeId, isCypress }: IProps) {
   const params = isCypress? null : new URLSearchParams(window.location.search);
   const _tx = params?.get("tx");
 
+  const cypressSetChainHelper = (
+    <Box>
+        <Button
+        id= 'avax-mainnet-switch'
+        onClick={() => {setChain!('AVALANCHE')}}
+        className="btn"
+        variant="outlined"
+        sx={{ mt: 2 }}
+      >
+        AVAX DEVNET
+      </Button>
+      <Button
+        id= 'avax-mainnet-switch'
+        onClick={() => {setChain!('AVALANCHE_MAINNET')}}
+        className="btn"
+        variant="outlined"
+        sx={{ mt: 2 }}
+      >
+        AVAX MAINNET
+      </Button>
+      <Button
+        id= 'sol-devnet-switch'
+        onClick={() => {setChain!('SOLANA')}}
+        className="btn"
+        variant="outlined"
+        sx={{ mt: 2 }}
+      >
+        SOLANA DEVNET
+      </Button>
+      <Button
+        id= 'sol-mainnet-switch'
+        onClick={() => {setChain!('SOLANA_MAINNET')}}
+        className="btn"
+        variant="outlined"
+        sx={{ mt: 2 }}
+      >
+        SOLANA MAINNET
+      </Button>
+    </Box>
+  );
+
   return (
     <Box sx={{ width: "100%" }}>
+
       <Typography
         variant={"h5"}
         sx={{ mb: 2, display: "flex", justifyContent: "center" }}
@@ -281,7 +326,12 @@ export function ChallengesView({ setChallengeId, isCypress }: IProps) {
           Sign Tx
         </Button>
       )}
+    
+    {
+        isCypress? cypressSetChainHelper : null
+      }
     </Box>
+    
   );
 }
 
