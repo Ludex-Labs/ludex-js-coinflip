@@ -7,8 +7,12 @@ import Lottie from "react-lottie";
 import * as coin from "./components/animations/coin.json";
 import Main from "./components/Main";
 
-function App() {
-  const [chain, setChain] = useState<CHAIN_CONFIG_TYPE>("SOLANA");
+interface IProps {
+  isCypress?: boolean;
+}
+
+function App({ isCypress }: IProps) {
+  const [chain, setChain] = useState<CHAIN_CONFIG_TYPE>("AVALANCHE");
 
   return (
     <Web3AuthProvider chain={chain}>
@@ -35,7 +39,7 @@ function App() {
               zIndex: -1,
             }}
           />
-          <Main setChain={setChain} />
+          <Main setChain={setChain} isCypress={isCypress} />
         </Box>
       </Box>
     </Web3AuthProvider>
