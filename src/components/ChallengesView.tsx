@@ -42,19 +42,19 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
     else if (chain === "AVALANCHE" && !isNative) payoutId = 379;
     else if (chain === "AVALANCHE_MAINNET" && isNative) payoutId = 388;
     else if (chain === "AVALANCHE_MAINNET" && !isNative) payoutId = 381;
-    else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 102;
-    else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 108;
-    else if (chain === "SOLANA" && isNative) payoutId = 91;
-    else if (chain === "SOLANA" && !isNative) payoutId = 64;
+    else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 436;
+    else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 437;
+    else if (chain === "SOLANA" && isNative) payoutId = 435;
+    else if (chain === "SOLANA" && !isNative) payoutId = 434;
   } else {
     if (chain === "AVALANCHE" && isNative) payoutId = 183;
     else if (chain === "AVALANCHE" && !isNative) payoutId = 184;
     else if (chain === "AVALANCHE_MAINNET" && isNative) payoutId = 188;
     else if (chain === "AVALANCHE_MAINNET" && !isNative) payoutId = 185;
-    else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 28;
-    else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 19;
-    else if (chain === "SOLANA" && isNative) payoutId = 28;
-    else if (chain === "SOLANA" && !isNative) payoutId = 19;
+    else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 192;
+    else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 193;
+    else if (chain === "SOLANA" && isNative) payoutId = 191;
+    else if (chain === "SOLANA" && !isNative) payoutId = 190;
   }
 
   useEffect(() => {
