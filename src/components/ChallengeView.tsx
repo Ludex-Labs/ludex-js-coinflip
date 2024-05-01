@@ -162,8 +162,12 @@ export const ChallengeView: FC<{
 
   const sendAVAXtx = async (tx: string) => {
     const decodedTx = Buffer.from(tx, "base64").toString("utf-8");
-    const transactions = JSON.parse(decodedTx);
-
+    const transactions = JSON.parse(decodedTx);  
+    if (transactions[0].gasLimit.type === 'BigNumber') {
+      const hex = transactions[0].gasLimit.hex.slice(2);
+      const numberValue = parseInt(hex, 16);
+      transactions[0].gasLimit = numberValue
+    }
     for (const transaction of transactions) {
       const res = await signAndSendTransaction(transaction);
       console.log("res: ", res);
