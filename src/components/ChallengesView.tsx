@@ -11,6 +11,7 @@ import {
   CircularProgress,
   Switch,
   Tooltip,
+  Modal,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useWeb3Auth } from "../services/web3auth";
@@ -24,54 +25,50 @@ interface IProps {
   isCypress?: boolean
 }
 
+
+const challengeTypes = [
+  'Native Token',
+  'Fungible Token',
+  'NFT',
+]
+
+
 export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) {
   const { chain, provider, signAndSendTransaction } = useWeb3Auth();
 
   const [loading, setLoading] = useState<boolean>(false);
   const [challenges, setChallenges] = useState<any[]>([]);
+  const [payouts, setPayouts] = useState<any[]>([]);
   const [hideCompleted, setHideCompleted] = useState<boolean>(true);
-  const [isNative, setIsNative] = useState<boolean>(true);
-
+  const [createChallengeModal, setCreateChallengeModal] = useState<boolean>(false);
+  const [challengeType, setChallengeType] = useState<string>("Native Token");
+  const [activePayoutId, setActivePayoutId] = useState<any>(null);
+  // Filters out completed challenges
   const challengeList = hideCompleted
     ? challenges?.filter((challenges) => challenges.state === "CREATED")
     : challenges;
 
-  var payoutId = 0;
-  if (process.env.NEXT_PUBLIC_BASE_URL) {
-    if (chain === "AVALANCHE" && isNative) payoutId = 319;
-    else if (chain === "AVALANCHE" && !isNative) payoutId = 379;
-    else if (chain === "AVALANCHE_MAINNET" && isNative) payoutId = 388;
-    else if (chain === "AVALANCHE_MAINNET" && !isNative) payoutId = 381;
-    else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 102;
-    else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 108;
-    else if (chain === "SOLANA" && isNative) payoutId = 186;
-    else if (chain === "SOLANA" && !isNative) payoutId = 64;
-  } else {
-    if (chain === "AVALANCHE" && isNative) payoutId = 183;
-    else if (chain === "AVALANCHE" && !isNative) payoutId = 184;
-    else if (chain === "AVALANCHE_MAINNET" && isNative) payoutId = 188;
-    else if (chain === "AVALANCHE_MAINNET" && !isNative) payoutId = 185;
-    else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 28;
-    else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 19;
-    else if (chain === "SOLANA" && isNative) payoutId = 28;
-    else if (chain === "SOLANA" && !isNative) payoutId = 19;
-  }
+  useEffect(() => {
+    getPayouts();
+    // eslint-disable-next-line
+  }, [challengeType]);
 
   useEffect(() => {
-    getChallenges(payoutId);
+    getChallenges();
     // eslint-disable-next-line
-  }, [isNative]);
+  }, [challengeType]);
 
-  const getChallenges = async (_payoutId: number) => {
+  const getChallenges = async () => {
     try {
       const response = await fetch(`/api/getChallenges`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payoutId: payoutId }),
+        body: JSON.stringify({}),
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
-      setChallenges(res.challenges);
+      const filteredChallengesByType = res.challenges.filter((challenge: any) => challengeType === "Native Token" ? challenge.payout.type === "NATIVE" : challengeType === "Fungible Token" ? challenge.payout.type === "FT" : challenge.payout.type === "NFT")
+      setChallenges(filteredChallengesByType);
       setLoading(false);
     } catch (error) {
       // @ts-ignore
@@ -81,12 +78,36 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
     }
   };
 
-  const createChallenge = async (_payoutId: number) => {
+  const getPayouts = async () => {
+    try {
+      const response = await fetch(`/api/getPayouts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          state: "APPROVED",
+          type: challengeType == "Native Token" ? "NATIVE" : challengeType == "Fungible Token" ? "FT" : "NFT",
+          chain: chain.includes("SOLANA") ? "SOLANA" : "AVALANCHE",
+          environment: chain.includes("MAINNET") ? "MAINNET" : "DEVNET",
+        }),
+      });
+      const res = await response.json();
+      if (res?.code >= 300) throw res;
+      setPayouts(res.payouts);
+      setLoading(false);
+    } catch (error) {
+      // @ts-ignore
+      if (error?.message) toast.error(error.message);
+      else toast.error(JSON.stringify(error));
+      console.error(error);
+    }
+  };
+
+  const createChallenge = async (activePayoutId?: any) => {
     try {
       const response = await fetch(`/api/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payoutId: _payoutId }),
+        body: JSON.stringify({ payoutId: activePayoutId }),
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
@@ -100,7 +121,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
   };
 
   const sign = async () => {
-    if(isCypress) {
+    if (isCypress) {
       return;
     }
     const params = new URLSearchParams(window.location.search);
@@ -115,14 +136,14 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
     }
   };
 
-  const params = isCypress? null : new URLSearchParams(window.location.search);
+  const params = isCypress ? null : new URLSearchParams(window.location.search);
   const _tx = params?.get("tx");
 
   const cypressSetChainHelper = (
     <Box>
-        <Button
-        id= 'avax-devnet-switch'
-        onClick={() => {setChain!('AVALANCHE')}}
+      <Button
+        id='avax-devnet-switch'
+        onClick={() => { setChain!('AVALANCHE') }}
         className="btn"
         variant="outlined"
         sx={{ mt: 2 }}
@@ -130,8 +151,8 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
         AVAX DEVNET
       </Button>
       <Button
-        id= 'avax-mainnet-switch'
-        onClick={() => {setChain!('AVALANCHE_MAINNET')}}
+        id='avax-mainnet-switch'
+        onClick={() => { setChain!('AVALANCHE_MAINNET') }}
         className="btn"
         variant="outlined"
         sx={{ mt: 2 }}
@@ -139,8 +160,8 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
         AVAX MAINNET
       </Button>
       <Button
-        id= 'sol-devnet-switch'
-        onClick={() => {setChain!('SOLANA')}}
+        id='sol-devnet-switch'
+        onClick={() => { setChain!('SOLANA') }}
         className="btn"
         variant="outlined"
         sx={{ mt: 2 }}
@@ -148,8 +169,8 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
         SOLANA DEVNET
       </Button>
       <Button
-        id= 'sol-mainnet-switch'
-        onClick={() => {setChain!('SOLANA_MAINNET')}}
+        id='sol-mainnet-switch'
+        onClick={() => { setChain!('SOLANA_MAINNET') }}
         className="btn"
         variant="outlined"
         sx={{ mt: 2 }}
@@ -159,59 +180,210 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
     </Box>
   );
 
-  return (
-    <Box sx={{ width: "100%" }}>
+  const displayCreateChallengeModal = (
+    <Box sx={{ alignSelf: "center", alignItems: "center", alignContent: "center", minWidth: "500px" }}>
 
       <Typography
         variant={"h5"}
-        sx={{ mb: 2, display: "flex", justifyContent: "center" }}
+        sx={{ my: 2, display: "flex", justifyContent: "center" }}
       >
-        Select Challenge
+        Select Payout
+      </Typography>
+
+
+      <Box sx={{
+        display: "flex", justifyContent: "space-evenly", padding: "3px 10px", borderBottom: "1px solid rgb(107, 114, 126)",
+      }}>
+        <Typography
+          variant={"h6"}
+        >
+          ID
+        </Typography>
+        <Typography
+          variant={"h6"}
+        >
+          Name
+        </Typography>
+
+        <Typography
+          variant={"h6"}
+        >
+          Chain
+        </Typography>
+
+        <Typography
+          variant={"h6"}
+        >
+          Rake
+        </Typography>
+        <Typography
+          variant={"h6"}
+        >
+          Fee
+        </Typography>
+
+      </Box>
+
+      <Box
+        sx={{
+          mb: 1,
+          mt: 1,
+          // borderBottom: "1px solid rgb(107, 114, 126)",
+          // borderRadius: "5px",
+          fontSize: "14px",
+          overflow: "auto",
+          width: "100%",
+          height: "150px",
+        }}
+      >
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : payouts?.length === 0 ? (
+          <div
+            style={{
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            No payouts available
+          </div>
+        ) : (
+          payouts?.map((payout) => (
+            <Box
+              key={payout?.id}
+              onClick={() => {
+                if (activePayoutId === payout?.id) {
+                  setActivePayoutId(null);  
+                  return;
+                }
+                else {
+                  setActivePayoutId(payout?.id);
+                }
+              }}
+              sx={{
+                display: "flex",
+                justifyContent: "space-evenly",
+                width: "100%",
+                borderBottom: "1px solid rgb(107, 114, 126)",
+                cursor: "pointer",
+                padding: "4px 10px",
+                "&:hover": {
+                  backgroundColor: "#5d5d5d",
+                },
+                background: activePayoutId === payout?.id ? "green" : "transparent",
+              }}
+            >
+              <div>{payout?.id}</div>
+              <div>{payout?.name ? payout.name : "-"}</div>
+
+              {payout.chain.includes("SOLANA") ? (
+                <Image alt="SOL" src={"/SOL.svg"} width={20} height={20} />
+              ) : chain.includes("AVALANCHE") ? (
+                <Image alt="AVAX" src={"/AVAX.svg"} width={20} height={20} />
+              ) : (
+                <>
+                </>
+              )}
+              <div>{payout?.mediatorRake + payout?.providerRake}</div>
+              <div>{payout?.mediatorFee + payout?.providerFee}</div>
+            </Box>
+          ))
+        )}
+      </Box>
+
+      <Button
+        onClick={() => {
+          createChallenge(activePayoutId)
+          setCreateChallengeModal(false);
+        }}
+        className="btn"
+        variant="contained"
+        disabled={!activePayoutId}
+        sx={{ mt: 2, backgroundColor: "#3eb718" }}
+      >
+        Create
+      </Button>
+
+    </Box>
+  );
+
+  return (
+    <Box sx={{ width: "100%" }}>
+      <Typography
+        variant={"h5"}
+        sx={{ display: "flex", justifyContent: "center" }}
+      >
+        Select Challenge Type
       </Typography>
 
       <Box
         sx={{
           display: "flex",
-          justifyContent: "center",
           alignItems: "center",
-          mb: 2,
+          justifyContent: "center",
         }}
       >
-        <Tooltip title="Fungible Token Challenge">
-          <IconButton onClick={() => setIsNative(false)}>
-            <Image
-              alt="Non-Native"
-              src={
-                chain === "SOLANA"
-                  ? "/WSOL.png"
-                  : chain === "AVALANCHE" || "AVALANCHE_MAINNET"
-                  ? "/USDC.png"
-                  : ""
-              }
-              width={30}
-              height={30}
-            />
-          </IconButton>
-        </Tooltip>
+        {challengeTypes.map((_type: string) => {
+          return (
+            <Tooltip title={`${_type} Challenges`}>
+              <Button
+                key={_type}
+                variant={challengeType === _type ? "contained" : "outlined"}
+                onClick={() => setChallengeType(_type)}
+                sx={{
+                  m: 1.5,
+                  mt: 4,
+                  width: "110px",
+                  height: "110px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                {chain.includes("SOLANA") ? (
+                  <Image alt="SOL" src={"/SOL.svg"} width={50} height={50} />
+                ) : chain.includes("AVALANCHE") ? (
+                  <Image alt="AVAX" src={"/AVAX.svg"} width={50} height={50} />
+                ) : (
+                  chain
+                )}
+                <Typography
+                  variant="caption"
+                  sx={{
+                    mt: 1,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {_type}
+                </Typography>
+              </Button>
+            </Tooltip>
+          );
+        })}
+      </Box>
 
-        <Switch id={"token-type-switch-btn"} checked={isNative} onChange={() => setIsNative(!isNative)} />
+      <Box sx={{ display: "flex", justifyContent: "space-between", padding: "3px 10px" }}>
+        <Typography
+          variant={"h6"}
+        >
+          ID
+        </Typography>
 
-        <Tooltip title="Native Challenge">
-          <IconButton onClick={() => setIsNative(true)}>
-            <Image
-              alt="Native"
-              src={
-                chain === "SOLANA"
-                  ? "/SOL.svg"
-                  : chain === "AVALANCHE" || "AVALANCHE_MAINNET"
-                  ? "/AVAX.svg"
-                  : ""
-              }
-              width={30}
-              height={30}
-            />
-          </IconButton>
-        </Tooltip>
+        <Typography
+          variant={"h6"}
+        >
+          Status
+        </Typography>
       </Box>
 
       <Box sx={{ position: "relative" }}>
@@ -219,7 +391,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
           size="small"
           onClick={() => {
             toast.success("Refetching challenges!");
-            getChallenges(payoutId);
+            getChallenges();
           }}
           sx={{
             display: "flex",
@@ -233,7 +405,6 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
         >
           <RefreshIcon />
         </IconButton>
-
         <Box
           sx={{
             mb: 1,
@@ -269,29 +440,32 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
               No challenges
             </div>
           ) : (
-            challengeList?.map((challenge) => (
-              <Box
-                key={challenge?.id}
-                onClick={() => {
-                  setChallengeId(challenge?.id);
-                }}
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  width: "100%",
-                  borderBottom: "1px solid rgb(107, 114, 126)",
-                  cursor: "pointer",
-                  padding: "2px 10px",
-                  "&:hover": {
-                    backgroundColor: "#5d5d5d",
-                  },
-                }}
-              >
-                <div>{challenge?.id}</div>
-                <div>{challenge?.state}</div>
-              </Box>
-            ))
+            <>
+              {challengeList?.map((challenge) => (
+                <Box
+                  key={challenge?.id}
+                  onClick={() => {
+                    setChallengeId(challenge?.id);
+                  }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    width: "100%",
+                    borderBottom: "1px solid rgb(107, 114, 126)",
+                    cursor: "pointer",
+                    padding: "4px 10px",
+                    "&:hover": {
+                      backgroundColor: "#5d5d5d",
+                    },
+                  }}
+                >
+                  <div>{challenge?.id}</div>
+                  <div>{challenge?.state}</div>
+                </Box>
+              ))}
+            </>
           )}
+
         </Box>
       </Box>
       <FormGroup
@@ -310,13 +484,22 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
       </FormGroup>
 
       <Button
-        onClick={() => createChallenge(payoutId)}
+        onClick={() => {
+          setCreateChallengeModal(true);
+        }}
         className="btn"
         variant="contained"
         sx={{ mt: 2, backgroundColor: "#3eb718" }}
       >
         Create New Challenge
       </Button>
+
+
+      <Modal sx={{ justifySelf: "center", alignSelf: "center", display: "grid", background: "#2f3140" }} open={createChallengeModal} onClose={() => {
+        setCreateChallengeModal(false);
+      }}>
+        {displayCreateChallengeModal}
+      </Modal>
 
       {_tx && (
         <Button
@@ -328,12 +511,12 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
           Sign Tx
         </Button>
       )}
-    
-    {
-        isCypress? cypressSetChainHelper : null
+
+      {
+        isCypress ? cypressSetChainHelper : null
       }
     </Box>
-    
+
   );
 }
 

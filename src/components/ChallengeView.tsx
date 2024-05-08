@@ -123,7 +123,7 @@ export const ChallengeView: FC<{
       const res = await response.json();
       if (res?.code >= 300 || response?.status >= 300) throw res;
       if (chain === "SOLANA") await sendSOLtx(res?.transaction, leave);
-      else if (chain === "AVALANCHE"|| 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
+      else if (chain === "AVALANCHE" || 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(JSON.stringify(error.message));
@@ -162,7 +162,7 @@ export const ChallengeView: FC<{
 
   const sendAVAXtx = async (tx: string) => {
     const decodedTx = Buffer.from(tx, "base64").toString("utf-8");
-    const transactions = JSON.parse(decodedTx);  
+    const transactions = JSON.parse(decodedTx);
     if (transactions[0].gasLimit.type === 'BigNumber') {
       const hex = transactions[0].gasLimit.hex.slice(2);
       const numberValue = parseInt(hex, 16);
@@ -256,7 +256,7 @@ export const ChallengeView: FC<{
         variant={"h5"}
         sx={{ mb: 2, display: "flex", justifyContent: "center" }}
       >
-        Challenge <span id='challengeId'>{challengeId}</span>
+        Challenge <span style={{ marginLeft: "10px" }} id='challengeId'>{challengeId}</span>
       </Typography>
 
       <Box sx={{ position: "relative" }}>
@@ -331,11 +331,11 @@ export const ChallengeView: FC<{
                 href={
                   payout?.chain === "SOLANA"
                     ? "https://solscan.io/account/" +
-                      blockchainAddress +
-                      "?cluster=devnet"
+                    blockchainAddress +
+                    "?cluster=devnet"
                     : payout?.chain === "AVALANCHE"
-                    ? "'https://testnet.snowtrace.io/'" + blockchainAddress
-                    : ""
+                      ? "'https://testnet.snowtrace.io/'" + blockchainAddress
+                      : ""
                 }
               >
                 {blockchainAddress?.substring(0, 15)}...
@@ -362,8 +362,8 @@ export const ChallengeView: FC<{
                   payout?.chain === "SOLANA"
                     ? "/SOL.svg"
                     : payout?.chain === "AVALANCHE"
-                    ? "/AVAX.svg"
-                    : ""
+                      ? "/AVAX.svg"
+                      : ""
                 }
                 width={18}
                 height={18}
@@ -372,6 +372,23 @@ export const ChallengeView: FC<{
                 }}
               />
               {payout?.chain}
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <span>Type</span>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              {payout?.type}
             </Box>
           </Box>
 
@@ -424,6 +441,30 @@ export const ChallengeView: FC<{
             </Box>
           </Box>
 
+          {/* Optionally render mediator and provider total fee values if available */}
+          {payout?.mediatorFee && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+            >
+              <span>Total Fee</span>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                }}
+              >
+                {Number(payout?.mediatorFee) + Number(payout?.providerFee)}
+                {" "}
+                {payout?.mint?.ticker}
+              </Box>
+            </Box>
+
+          )}
+
           <Divider sx={{ mt: 1, mb: 1 }} />
 
           <Box
@@ -451,20 +492,20 @@ export const ChallengeView: FC<{
                 sx={
                   players?.length > 0
                     ? {
-                        textAlign: "center",
-                        width: "100%",
-                        border: "3px solid #fff",
-                        mb: 1,
-                      }
+                      textAlign: "center",
+                      width: "100%",
+                      border: "3px solid #fff",
+                      mb: 1,
+                    }
                     : isLoading || state !== "CREATED"
-                    ? {
+                      ? {
                         textAlign: "center",
                         width: "100%",
                         border: "3px dotted #fff",
                         mb: 1,
                         opacity: 0.5,
                       }
-                    : {
+                      : {
                         textAlign: "center",
                         width: "100%",
                         border: "3px dotted #fff",
@@ -499,20 +540,20 @@ export const ChallengeView: FC<{
                 sx={
                   players?.length > 1
                     ? {
-                        textAlign: "center",
-                        width: "100%",
-                        border: "3px solid #fff",
-                        mb: 1,
-                      }
+                      textAlign: "center",
+                      width: "100%",
+                      border: "3px solid #fff",
+                      mb: 1,
+                    }
                     : isLoading || state !== "CREATED"
-                    ? {
+                      ? {
                         textAlign: "center",
                         width: "100%",
                         border: "3px dotted #fff",
                         mb: 1,
                         opacity: 0.5,
                       }
-                    : {
+                      : {
                         textAlign: "center",
                         width: "100%",
                         border: "3px dotted #fff",

@@ -13,14 +13,18 @@ interface IProps {
 
 function App({ isCypress }: IProps) {
   const [chain, setChain] = useState<CHAIN_CONFIG_TYPE>("AVALANCHE");
+  const [displayWallet, setDisplayWallet] = useState<boolean>(false);
 
   return (
     <Web3AuthProvider chain={chain}>
-      <Box className="bg">
+      <Box sx={{
+        minHeight: "100vh",
+        width: "100%",
+        background: "linear-gradient(-45deg, #8c95ab 0%, #5f6574 25%, #353840 51%, #0e0f11 100%)",
+        display: "grid"
+      }}>
         <Toaster />
-
-        <Box className="container-page">
-          <Lottie
+        {/* <Lottie
             options={{
               loop: true,
               autoplay: true,
@@ -38,11 +42,10 @@ function App({ isCypress }: IProps) {
               top: 0,
               zIndex: -1,
             }}
-          />
-          <Main setChain={setChain} isCypress={isCypress} />
-        </Box>
+          /> */}
+        <Main setChain={setChain} isCypress={isCypress} displayWallet={displayWallet} setDisplayWallet={setDisplayWallet} />
       </Box>
-    </Web3AuthProvider>
+    </Web3AuthProvider >
   );
 }
 

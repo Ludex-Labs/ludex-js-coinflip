@@ -91,7 +91,7 @@ export const WalletView: FC<{
         variant="contained"
         sx={{ mt: 2 }}
       >
-        Wallet
+        Go Back
       </Button>
     </Box>
   );
