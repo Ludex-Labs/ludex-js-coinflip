@@ -121,11 +121,10 @@ export const NftChallengeView: FC<{
         }),
       });
       const res = await response.json();
-      console.log('🤡🤡🤡🤡🤡', res);
+      console.log("🤡🤡🤡🤡🤡", res);
 
       if (res?.code >= 300 || response?.status >= 300) throw res;
       if (chain === "SOLANA") await sendSOLtx(res?.transaction, leave);
-      else if (chain === "AVALANCHE"|| 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(JSON.stringify(error.message));
@@ -136,43 +135,77 @@ export const NftChallengeView: FC<{
     }
   };
 
-  const joinChallengeWithHouse = async () => {
-    setIsLoading(true);
-
+  const addSolOffering = async () => {
     try {
-      var url = "/api/joinWithHouse";
+      var url = "/api/nft/addSolOffering";
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           challengeId: challengeId,
+          playerPubkey: account,
+          amount: 0.0000001,
         }),
       });
       const res = await response.json();
+      console.log("🤡🤡🤡🤡🤡", res);
+
       if (res?.code >= 300 || response?.status >= 300) throw res;
       if (chain === "SOLANA") await sendSOLtx(res?.transaction, false);
-      else if (chain === "AVALANCHE") await sendAVAXtx(res?.transaction);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(JSON.stringify(error.message));
       else toast.error(JSON.stringify(error));
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const sendAVAXtx = async (tx: string) => {
-    const decodedTx = Buffer.from(tx, "base64").toString("utf-8");
-    const transactions = JSON.parse(decodedTx);  
-    if (transactions[0].gasLimit.type === 'BigNumber') {
-      const hex = transactions[0].gasLimit.hex.slice(2);
-      const numberValue = parseInt(hex, 16);
-      transactions[0].gasLimit = numberValue
+  const addNftOffering = async () => {
+    try {
+      var url = "/api/nft/addNftOffering";
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: challengeId,
+          playerPubkey: account,
+          amount: 0.0000001,
+        }),
+      });
+      const res = await response.json();
+      console.log("🤡🤡🤡🤡🤡", res);
+
+      if (res?.code >= 300 || response?.status >= 300) throw res;
+      if (chain === "SOLANA") await sendSOLtx(res?.transaction, false);
+    } catch (error) {
+      // @ts-ignore
+      if (error?.message) toast.error(JSON.stringify(error.message));
+      else toast.error(JSON.stringify(error));
+      console.error(error);
     }
-    for (const transaction of transactions) {
-      const res = await signAndSendTransaction(transaction);
-      console.log("res: ", res);
+  };
+
+  const acceptOffering = async () => {
+    try {
+      var url = "/api/nft/accept";
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: challengeId,
+          playerPubkey: account,
+        }),
+      });
+      const res = await response.json();
+      console.log("🤡🤡🤡🤡🤡", res);
+
+      if (res?.code >= 300 || response?.status >= 300) throw res;
+      if (chain === "SOLANA") await sendSOLtx(res?.transaction, false);
+    } catch (error) {
+      // @ts-ignore
+      if (error?.message) toast.error(JSON.stringify(error.message));
+      else toast.error(JSON.stringify(error));
+      console.error(error);
     }
   };
 
@@ -259,7 +292,7 @@ export const NftChallengeView: FC<{
         variant={"h5"}
         sx={{ mb: 2, display: "flex", justifyContent: "center" }}
       >
-        Challenge <span id='challengeId'>{challengeId}</span>
+        Challenge <span id="challengeId">{challengeId}</span>
       </Typography>
 
       <Box sx={{ position: "relative" }}>
@@ -554,6 +587,50 @@ export const NftChallengeView: FC<{
             backgroundColor: "#3eb718",
             mt: 1,
           }}
+          onClick={() => addSolOffering()}
+        >
+          Add Sol Offering
+        </Button>
+
+        <Button
+          className="btn"
+          fullWidth
+          variant="contained"
+          size="large"
+          disabled={isLoading || (state !== "CREATED" && state !== "LOCKED")}
+          sx={{
+            backgroundColor: "#3eb718",
+            mt: 1,
+          }}
+          onClick={() => addNftOffering()}
+        >
+          Add NFT Offering
+        </Button>
+        <Button
+          className="btn"
+          fullWidth
+          variant="contained"
+          size="large"
+          disabled={isLoading || (state !== "CREATED" && state !== "LOCKED")}
+          sx={{
+            backgroundColor: "#3eb718",
+            mt: 1,
+          }}
+          onClick={() => acceptOffering()}
+        >
+          Accept Offering
+        </Button>
+
+        <Button
+          className="btn"
+          fullWidth
+          variant="contained"
+          size="large"
+          disabled={isLoading || (state !== "CREATED" && state !== "LOCKED")}
+          sx={{
+            backgroundColor: "#3eb718",
+            mt: 1,
+          }}
           onClick={() => startGame()}
         >
           Start
@@ -573,22 +650,6 @@ export const NftChallengeView: FC<{
         >
           Cancel
         </Button>
-
-        {chain === "SOLANA" && (
-          <Button
-            className="btn"
-            fullWidth
-            variant="contained"
-            size="large"
-            disabled={isLoading || (state !== "CREATED" && state !== "LOCKED")}
-            sx={{
-              mt: 1,
-            }}
-            onClick={() => joinChallengeWithHouse()}
-          >
-            Play Against House
-          </Button>
-        )}
 
         {players?.includes(account) && (
           <Button
