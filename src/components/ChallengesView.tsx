@@ -44,7 +44,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
     else if (chain === "AVALANCHE_MAINNET" && !isNative) payoutId = 381;
     else if (chain === "SOLANA_MAINNET" && isNative) payoutId = 102;
     else if (chain === "SOLANA_MAINNET" && !isNative) payoutId = 108;
-    else if (chain === "SOLANA" && isNative) payoutId = 186;
+    else if (chain === "SOLANA" && isNative) payoutId = 91;
     else if (chain === "SOLANA" && !isNative) payoutId = 64;
   } else {
     if (chain === "AVALANCHE" && isNative) payoutId = 183;
