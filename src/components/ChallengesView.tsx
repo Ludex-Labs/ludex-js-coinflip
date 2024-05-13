@@ -16,9 +16,8 @@ import {
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useWeb3Auth } from "../services/web3auth";
 import Image from "next/image";
-import { Transaction, Keypair, Connection } from "@solana/web3.js";
+import { Transaction, Keypair, Connection, LAMPORTS_PER_SOL} from "@solana/web3.js";
 import { CHAIN_CONFIG_TYPE } from "../config/chainConfig";
-
 interface IProps {
   setChallengeId: (challengeId: number) => void;
   setChain?: (chain: CHAIN_CONFIG_TYPE) => void;
@@ -32,7 +31,6 @@ const challengeTypes = [
 ]
 
 export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) {
-
   const { chain, provider, signAndSendTransaction } = useWeb3Auth();
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -284,8 +282,9 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
             No payouts available
           </div>
         ) : (
-          payouts?.map((payout) => (
-            <Box
+          payouts?.map((payout) => {
+            return (
+              <Box
               key={payout?.id}
               onClick={() => {
                 if (activePayoutId === payout?.id) {
@@ -320,10 +319,12 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
                 <>
                 </>
               )}
-              <div>{payout?.mediatorRake + payout?.providerRake}</div>
-              <div>{payout?.mediatorFee + payout?.providerFee}</div>
+
+              <div>{ (parseInt(payout?.mediatorRake) + parseInt(payout?.providerRake)) / LAMPORTS_PER_SOL} SOL</div>
+              <div>{ (parseInt(payout?.mediatorFee) + parseInt(payout?.providerFee)) / LAMPORTS_PER_SOL} SOL</div>
             </Box>
-          ))
+            )
+          })
         )}
       </Box>
 
