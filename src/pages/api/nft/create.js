@@ -6,12 +6,12 @@ const authToken = process.env.LUDEX_KEY;
 export default async function handler(req, res) {
   const { payoutId } = req.body;
 
-  console.log('🚨🚨🚨🚨'.payoutId)
+  console.log('🚨🚨🚨🚨'.payoutId);
+  
   try {
     const requestbody = {
       payoutId
     }
-
     const response = await axios.post(ludexApi, requestbody, {
       headers: {
         Authorization: `Bearer ${authToken}`,

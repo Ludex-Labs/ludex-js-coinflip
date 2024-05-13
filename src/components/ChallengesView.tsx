@@ -25,15 +25,14 @@ interface IProps {
   isCypress?: boolean
 }
 
-
 const challengeTypes = [
   'Native Token',
   'Fungible Token',
   'NFT',
 ]
 
-
 export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) {
+
   const { chain, provider, signAndSendTransaction } = useWeb3Auth();
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -43,6 +42,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
   const [createChallengeModal, setCreateChallengeModal] = useState<boolean>(false);
   const [challengeType, setChallengeType] = useState<string>("Native Token");
   const [activePayoutId, setActivePayoutId] = useState<any>(null);
+
   // Filters out completed challenges
   const challengeList = hideCompleted
     ? challenges?.filter((challenges) => challenges.state === "CREATED")
@@ -67,7 +67,8 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
-      const filteredChallengesByType = res.challenges.filter((challenge: any) => challengeType === "Native Token" ? challenge.payout.type === "NATIVE" : challengeType === "Fungible Token" ? challenge.payout.type === "FT" : challenge.payout.type === "NFT")
+      // Filter challenges based on challenge type selected
+      const filteredChallengesByType = res.challenges.filter((challenge: any) => challengeType === "Native Token" ? challenge.payout.type === "NATIVE" : challengeType === "Fungible Token" ? challenge.payout.type === "FT" : challenge.payout.type === "NFT");
       setChallenges(filteredChallengesByType);
       setLoading(false);
     } catch (error) {
@@ -103,20 +104,45 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
   };
 
   const createChallenge = async (activePayoutId?: any) => {
-    try {
-      const response = await fetch(`/api/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payoutId: activePayoutId }),
-      });
-      const res = await response.json();
-      if (res?.code >= 300) throw res;
-      else setChallengeId(res?.challengeId);
-    } catch (error) {
-      // @ts-ignore
-      if (error?.message) toast.error(error.message);
-      else toast.error(JSON.stringify(error));
-      console.error(error);
+    const selectedPayout = payouts.find((payout) => payout.id === activePayoutId);
+    if (!selectedPayout) {
+      toast.error("Please select a valid payout");
+      return;
+    }
+    if (selectedPayout.type == "NFT") {
+      try {
+        const response = await fetch(`/api/nft/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ payoutId: activePayoutId }),
+        });
+        const res = await response.json();
+        if (res?.code >= 300) throw res;
+        else toast.success("NFT Challenge created successfully");
+      } catch (error) {
+        // @ts-ignore
+        if (error?.message) toast.error(error.message);
+        else toast.error(JSON.stringify(error));
+        console.error(error);
+      }
+
+    }
+    else {
+      try {
+        const response = await fetch(`/api/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ payoutId: activePayoutId }),
+        });
+        const res = await response.json();
+        if (res?.code >= 300) throw res;
+        else setChallengeId(res?.challengeId);
+      } catch (error) {
+        // @ts-ignore
+        if (error?.message) toast.error(error.message);
+        else toast.error(JSON.stringify(error));
+        console.error(error);
+      }
     }
   };
 
@@ -182,7 +208,6 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
 
   const displayCreateChallengeModal = (
     <Box sx={{ alignSelf: "center", alignItems: "center", alignContent: "center", minWidth: "500px" }}>
-
       <Typography
         variant={"h5"}
         sx={{ my: 2, display: "flex", justifyContent: "center" }}
@@ -264,7 +289,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
               key={payout?.id}
               onClick={() => {
                 if (activePayoutId === payout?.id) {
-                  setActivePayoutId(null);  
+                  setActivePayoutId(null);
                   return;
                 }
                 else {
@@ -318,6 +343,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
     </Box>
   );
 
+
   return (
     <Box sx={{ width: "100%" }}>
       <Typography
@@ -336,7 +362,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
       >
         {challengeTypes.map((_type: string) => {
           return (
-            <Tooltip title={`${_type} Challenges`}>
+            <Tooltip key={_type} title={`${_type} Challenges`}>
               <Button
                 key={_type}
                 variant={challengeType === _type ? "contained" : "outlined"}
@@ -371,16 +397,16 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
           );
         })}
       </Box>
-
+      {/* Table Titles */}
       <Box sx={{ display: "flex", justifyContent: "space-between", padding: "3px 10px" }}>
         <Typography
-          variant={"h6"}
+          variant={"body1"}
         >
           ID
         </Typography>
 
         <Typography
-          variant={"h6"}
+          variant={"body1"}
         >
           Status
         </Typography>
@@ -468,6 +494,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
 
         </Box>
       </Box>
+
       <FormGroup
         sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
       >

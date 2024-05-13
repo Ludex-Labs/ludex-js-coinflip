@@ -13,6 +13,7 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@ludex-labs/ludex-sdk-js": "^2.0.6",
+    "@metaplex-foundation/js": "^0.20.1",
     "@mui/icons-material": "^5.14.16",
     "@mui/material": "^5.14.17",
     "@walletconnect/sign-client": "^2.10.5",
