@@ -12,12 +12,26 @@ import {
   Switch,
   Tooltip,
   Modal,
+  TableContainer,
+  Paper,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useWeb3Auth } from "../services/web3auth";
 import Image from "next/image";
-import { Transaction, Keypair, Connection, LAMPORTS_PER_SOL} from "@solana/web3.js";
+import { Transaction, Keypair, Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { CHAIN_CONFIG_TYPE } from "../config/chainConfig";
+import _ from 'lodash';
+// icons
+import { Icon, IconifyIcon } from '@iconify/react';
+// @mui
+import { BoxProps, SxProps } from '@mui/material';
+
+
 interface IProps {
   setChallengeId: (challengeId: number) => void;
   setChain?: (chain: CHAIN_CONFIG_TYPE) => void;
@@ -40,6 +54,9 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
   const [createChallengeModal, setCreateChallengeModal] = useState<boolean>(false);
   const [challengeType, setChallengeType] = useState<string>("Native Token");
   const [activePayoutId, setActivePayoutId] = useState<any>(null);
+
+  const [sortAttribute, setSortAttribute] = useState('id');
+  const [order, setOrder] = useState('desc');
 
   // Filters out completed challenges
   const challengeList = hideCompleted
@@ -204,129 +221,92 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
     </Box>
   );
 
-  const displayCreateChallengeModal = (
-    <Box sx={{ alignSelf: "center", alignItems: "center", alignContent: "center", minWidth: "500px" }}>
-      <Typography
-        variant={"h5"}
-        sx={{ my: 2, display: "flex", justifyContent: "center" }}
-      >
-        Select Payout
-      </Typography>
-
-
-      <Box sx={{
-        display: "flex", justifyContent: "space-evenly", padding: "3px 10px", borderBottom: "1px solid rgb(107, 114, 126)",
-      }}>
-        <Typography
-          variant={"h6"}
-        >
-          ID
-        </Typography>
-        <Typography
-          variant={"h6"}
-        >
-          Name
-        </Typography>
-
-        <Typography
-          variant={"h6"}
-        >
-          Chain
-        </Typography>
-
-        <Typography
-          variant={"h6"}
-        >
-          Rake
-        </Typography>
-        <Typography
-          variant={"h6"}
-        >
-          Fee
-        </Typography>
-
-      </Box>
-
-      <Box
-        sx={{
-          mb: 1,
-          mt: 1,
-          // borderBottom: "1px solid rgb(107, 114, 126)",
-          // borderRadius: "5px",
-          fontSize: "14px",
-          overflow: "auto",
-          width: "100%",
-          height: "150px",
-        }}
-      >
-        {loading ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "100%",
-            }}
-          >
-            <CircularProgress />
-          </Box>
-        ) : payouts?.length === 0 ? (
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            No payouts available
-          </div>
-        ) : (
-          payouts?.map((payout) => {
-            return (
-              <Box
-              key={payout?.id}
-              onClick={() => {
-                if (activePayoutId === payout?.id) {
-                  setActivePayoutId(null);
-                  return;
+  const displayCreateChallengeModalNFT = (
+    <>
+      <TableContainer sx={{ minWidth: "550px" }} component={Paper}>
+        <Table aria-label="collapsible table" sx={{ overflowX: 'scroll' }}>
+          <TableHead>
+            <TableRow>
+              <TableCell onClick={() => {
+                setSortAttribute("id");
+                if (order == "desc") {
+                  setOrder("asc");
                 }
                 else {
-                  setActivePayoutId(payout?.id);
+                  setOrder("desc");
                 }
-              }}
-              sx={{
-                display: "flex",
-                justifyContent: "space-evenly",
-                width: "100%",
-                borderBottom: "1px solid rgb(107, 114, 126)",
-                cursor: "pointer",
-                padding: "4px 10px",
-                "&:hover": {
-                  backgroundColor: "#5d5d5d",
-                },
-                background: activePayoutId === payout?.id ? "green" : "transparent",
-              }}
-            >
-              <div>{payout?.id}</div>
-              <div>{payout?.name ? payout.name : "-"}</div>
+              }} align="left">
+                ID
+                {sortAttribute == "id" && order == "asc" &&
+                  <Iconify sx={{ ml: 1, verticalAlign: "middle" }} icon="ep:arrow-down" />
+                }
+                {sortAttribute == "id" && order == "desc" &&
+                  <Iconify sx={{ ml: 1, verticalAlign: "middle" }} icon="ep:arrow-up" />
+                }
 
-              {payout.chain.includes("SOLANA") ? (
-                <Image alt="SOL" src={"/SOL.svg"} width={20} height={20} />
-              ) : chain.includes("AVALANCHE") ? (
-                <Image alt="AVAX" src={"/AVAX.svg"} width={20} height={20} />
-              ) : (
-                <>
-                </>
-              )}
-
-              <div>{ (parseInt(payout?.mediatorRake) + parseInt(payout?.providerRake)) / LAMPORTS_PER_SOL} SOL</div>
-              <div>{ (parseInt(payout?.mediatorFee) + parseInt(payout?.providerFee)) / LAMPORTS_PER_SOL} SOL</div>
-            </Box>
+              </TableCell>
+              <TableCell align="left">Name</TableCell>
+              <TableCell align="center">Chain</TableCell>
+              <TableCell align="left">Fee</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {_.orderBy(
+              payouts,
+              [(item: any) => item?.[`${sortAttribute}`]],
+              [order as boolean | "asc" | "desc"] // Fix: Cast 'order' to the appropriate type
+            )?.map((payout, index) => {
+              return (
+                <TableRow
+                  key={payout.id}
+                  onClick={() => {
+                    if (activePayoutId === payout?.id) {
+                      setActivePayoutId(null);
+                      return;
+                    }
+                    else {
+                      setActivePayoutId(payout?.id);
+                    }
+                  }}
+                  sx={{
+                    cursor: "pointer",
+                    height: '45px',
+                    transition: 'all 0.3s ease',
+                    "&:hover": {
+                      backgroundColor: "#5d5d5d",
+                    },
+                    background: activePayoutId === payout?.id ? "green" : "transparent",
+                  }}
+                >
+                  <TableCell align="left">
+                    {payout.id ? payout.id : 'N/A'}
+                  </TableCell>
+                  <TableCell align="left">
+                    {payout.name ? payout.name : 'N/A'}
+                  </TableCell>
+                  <TableCell align="center">
+                    {payout.chain.includes("SOLANA") ? (
+                      <Image alt="SOL" src={"/SOL.svg"} width={20} height={20} />
+                    ) : chain.includes("AVALANCHE") ? (
+                      <Image alt="AVAX" src={"/AVAX.svg"} width={20} height={20} />
+                    ) : (
+                      <>
+                      </>
+                    )}
+                  </TableCell>
+                  <TableCell align="left">
+                    {(parseInt(payout?.mediatorFee) + parseInt(payout?.providerFee)) / LAMPORTS_PER_SOL} SOL
+                  </TableCell>
+                </TableRow>
+              )
+            }
             )
-          })
-        )}
-      </Box>
+
+
+            }
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Button
         onClick={() => {
@@ -341,8 +321,109 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
         Create
       </Button>
 
-    </Box>
+    </>
   );
+
+  const displayCreateChallengeModal = (
+    <>
+      <TableContainer sx={{ minWidth: "550px" }} component={Paper}>
+        <Table aria-label="collapsible table" sx={{ overflowX: 'scroll' }}>
+          <TableHead>
+            <TableRow>
+              <TableCell onClick={() => {
+                setSortAttribute("id");
+                if (order == "desc") {
+                  setOrder("asc");
+                }
+                else {
+                  setOrder("desc");
+                }
+              }} align="left">
+                ID
+                {sortAttribute == "id" && order == "asc" &&
+                  <Iconify sx={{ ml: 1, verticalAlign: "middle" }} icon="ep:arrow-down" />
+                }
+                {sortAttribute == "id" && order == "desc" &&
+                  <Iconify sx={{ ml: 1, verticalAlign: "middle" }} icon="ep:arrow-up" />
+                }
+
+              </TableCell>
+              <TableCell align="left">Name</TableCell>
+              <TableCell align="center">Chain</TableCell>
+              <TableCell align="left">Rake</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {_.orderBy(
+              payouts,
+              [(item: any) => item?.[`${sortAttribute}`]],
+              [order as boolean | "asc" | "desc"] // Fix: Cast 'order' to the appropriate type
+            )?.map((payout: any, index: number) => {
+              console.log(payout);
+              return (
+                <TableRow
+                  key={payout.id}
+                  onClick={() => {
+                    if (activePayoutId === payout?.id) {
+                      setActivePayoutId(null);
+                      return;
+                    }
+                    else {
+                      setActivePayoutId(payout?.id);
+                    }
+                  }}
+                  sx={{
+                    cursor: "pointer",
+                    height: '45px',
+                    transition: 'all 0.3s ease',
+                    "&:hover": {
+                      backgroundColor: "#5d5d5d",
+                    },
+                    background: activePayoutId === payout?.id ? "green" : "transparent",
+                  }}
+                >
+                  <TableCell align="left">
+                    {payout.id ? payout.id : 'N/A'}
+                  </TableCell>
+                  <TableCell align="left">
+                    {payout.name ? payout.name : 'N/A'}
+                  </TableCell>
+                  <TableCell align="center">
+                    {payout.chain.includes("SOLANA") ? (
+                      <Image alt="SOL" src={"/SOL.svg"} width={20} height={20} />
+                    ) : chain.includes("AVALANCHE") ? (
+                      <Image alt="AVAX" src={"/AVAX.svg"} width={20} height={20} />
+                    ) : (
+                      <>
+                      </>
+                    )}
+                  </TableCell>
+                  <TableCell align="left">
+                    {(parseInt(payout?.mediatorRake) + parseInt(payout?.providerRake)) / LAMPORTS_PER_SOL} SOL
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Button
+        onClick={() => {
+          createChallenge(activePayoutId)
+          setCreateChallengeModal(false);
+        }}
+        className="btn"
+        variant="contained"
+        disabled={!activePayoutId}
+        sx={{ mt: 2, backgroundColor: "#3eb718" }}
+      >
+        Create
+      </Button>
+
+    </>
+  );
+
 
 
   return (
@@ -526,7 +607,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
       <Modal sx={{ justifySelf: "center", alignSelf: "center", display: "grid", background: "#2f3140" }} open={createChallengeModal} onClose={() => {
         setCreateChallengeModal(false);
       }}>
-        {displayCreateChallengeModal}
+        {challengeType == "NFT" ? displayCreateChallengeModalNFT : displayCreateChallengeModal}
       </Modal>
 
       {_tx && (
@@ -549,3 +630,17 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
 }
 
 export default ChallengesView;
+
+
+
+
+// ----------------------------------------------------------------------
+
+interface Props extends BoxProps {
+  sx?: SxProps;
+  icon: IconifyIcon | string;
+}
+
+export function Iconify({ icon, sx, ...other }: Props) {
+  return <Box component={Icon} icon={icon} sx={{ ...sx }} {...other} />;
+}
