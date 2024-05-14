@@ -501,19 +501,32 @@ export const ChallengeView: FC<{
     }
   };
 
-  const resolveNFT = async () => {
+  const resolveNFT = async () => {  
     setIsLoading(true);
     try {
+      // Prepare payout object
+      let _payout = [
+        { to: challenge?.players[0], offering: "" },
+        { to: challenge?.players[1], offering: "" },
+      ];
+
+      // Swap the offerings
+      offerings.map((offering) => {
+        if (offering.authority == challenge?.players[1]) {
+          _payout[0].offering = offering.publicKey;
+        }
+        else if (offering.authority == challenge?.players[0]) {
+          _payout[1].offering = offering.publicKey;
+        }
+      });
+
       // Pass In offering.publicKey 
       const response = await fetch(`/api/nft/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           challengeId: challenge?.id,
-          payout: [
-            { to: challenge?.players[0], offering: "Giw8tXkQyNQUiJoYaMD4QijCdgxYxgcgqgUgcfM5D4rD" },
-            { to: challenge?.players[1], offering: "Fh42jtmXZusN3bEoBkUMTBLtJF5kcSvgVwXeEahkZxQL" },
-          ]
+          payout: _payout
         }),
       });
       const res = await response.json();
@@ -589,10 +602,6 @@ export const ChallengeView: FC<{
   }
 
   const { players, payout, blockchainAddress, limit, state } = challenge;
-
-  console.log(players, 'players');
-  console.log(playerStatuses, 'playerStatuses');
-  console.log(playerStatus, 'playerStatus');
 
   return (
     <Box
@@ -962,7 +971,7 @@ export const ChallengeView: FC<{
                       width: "100%",
                     }}
                   >
-                    {(offerings.length == 0 || (offerings.filter((offering) => offering.authority != players[0])).length == 0) && (
+                    {offerings.filter((offering) => offering.authority == players[0]).length == 0 && (
                       <Box sx={{ justifySelf: "center", alignSelf: "center" }}>
                         <Typography>No Offerings</Typography>
                       </Box>
@@ -971,8 +980,14 @@ export const ChallengeView: FC<{
                     {offerings.map((offering) => {
                       // Prevents rendering player 1's offerings on player 0's offering section
                       if (offering?.authority !== players[0]) return;
-                      return (
-                        <Offering key={offering.mint} offering={offering} />)
+                      if (offering.mint) {
+                        return (
+                          <NFTOffering key={offering.mint} offering={offering} />)
+                      }
+                      else {
+                        return (
+                          <SolOffering key={offering.mint} offering={offering} />)
+                      }
                     })}
                   </Box>
 
@@ -1050,7 +1065,7 @@ export const ChallengeView: FC<{
                         </Tooltip>
                       </Box>
                     )}
-                  </> 
+                  </>
                 </Box>
 
 
@@ -1074,7 +1089,7 @@ export const ChallengeView: FC<{
                     }}
                   >
 
-                    {(offerings.length == 0 || (offerings.filter((offering) => offering.authority != players[1])).length == 0) && (
+                    {(players < 2 || offerings.filter((offering) => offering.authority == players[1]).length == 0) && (
                       <Box sx={{ justifySelf: "center", alignSelf: "center" }}>
                         <Typography>No Offerings</Typography>
                       </Box>
@@ -1083,8 +1098,15 @@ export const ChallengeView: FC<{
                     {offerings.map((offering) => {
                       // Prevents rendering player 0's offerings on player 1's offering section
                       if (offering?.authority !== players[1]) return;
-                      return (
-                        <Offering key={offering.mint} offering={offering} />)
+                      // Add NFTOffering component if mint is available
+                      if (offering.mint) {
+                        return (
+                          <NFTOffering key={offering.mint} offering={offering} />)
+                      }
+                      else {
+                        return (
+                          <SolOffering key={offering.mint} offering={offering} />)
+                      }
                     })}
 
                   </Box>
@@ -1329,8 +1351,9 @@ export const ChallengeView: FC<{
 };
 
 
-const Offering = ({ offering }: any) => {
+const NFTOffering = ({ offering }: any) => {
 
+  console.log(offering, 'offering');
   const [metadata, setMetadata] = useState<any>();
 
   useEffect(() => {
@@ -1348,8 +1371,7 @@ const Offering = ({ offering }: any) => {
   }, [offering]);
 
   return (
-    <>
-      <Box key={offering.mint}
+      <Box 
         sx={{
           display: "grid",
         }}>
@@ -1368,8 +1390,21 @@ const Offering = ({ offering }: any) => {
           </Tooltip>
         )}
       </Box>
-    </>
   )
-
 }
+const SolOffering = ({ offering }: any) => {
 
+  return (
+      <Box 
+        sx={{
+          display: "grid",
+        }}>
+        <Typography sx={{
+          justifySelf: "center",
+          alignSelf: "center",
+        }}>
+          {parseInt(offering.amount) / LAMPORTS_PER_SOL} SOL
+        </Typography>
+      </Box>
+  );
+}
