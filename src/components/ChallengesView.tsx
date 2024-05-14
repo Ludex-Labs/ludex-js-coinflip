@@ -45,7 +45,7 @@ const challengeTypes = [
 ]
 
 export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) {
-  const { chain, provider, signAndSendTransaction } = useWeb3Auth();
+  const { chain, signAndSendTransaction } = useWeb3Auth();
 
   const [loading, setLoading] = useState<boolean>(false);
   const [challenges, setChallenges] = useState<any[]>([]);
@@ -84,7 +84,8 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
       if (res?.code >= 300) throw res;
       // Filter challenges based on challenge type selected
       const filteredChallengesByType = res.challenges.filter((challenge: any) => challengeType === "Native Token" ? challenge.payout.type === "NATIVE" : challengeType === "Fungible Token" ? challenge.payout.type === "FT" : challenge.payout.type === "NFT");
-      setChallenges(filteredChallengesByType);
+      const filteredChallengesByChain = filteredChallengesByType.filter((challenge: any) => challenge.payout.chain === chain);
+      setChallenges(filteredChallengesByChain);
       setLoading(false);
     } catch (error) {
       // @ts-ignore
@@ -300,10 +301,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
                 </TableRow>
               )
             }
-            )
-
-
-            }
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -359,7 +357,6 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
               [(item: any) => item?.[`${sortAttribute}`]],
               [order as boolean | "asc" | "desc"] // Fix: Cast 'order' to the appropriate type
             )?.map((payout: any, index: number) => {
-              console.log(payout);
               return (
                 <TableRow
                   key={payout.id}
@@ -424,8 +421,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
     </>
   );
 
-
-
+  
   return (
     <Box sx={{ width: "100%" }}>
       <Typography
@@ -549,28 +545,32 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
             </div>
           ) : (
             <>
-              {challengeList?.map((challenge) => (
-                <Box
-                  key={challenge?.id}
-                  onClick={() => {
-                    setChallengeId(challenge?.id);
-                  }}
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    width: "100%",
-                    borderBottom: "1px solid rgb(107, 114, 126)",
-                    cursor: "pointer",
-                    padding: "4px 10px",
-                    "&:hover": {
-                      backgroundColor: "#5d5d5d",
-                    },
-                  }}
-                >
-                  <div>{challenge?.id}</div>
-                  <div>{challenge?.state}</div>
-                </Box>
-              ))}
+              {challengeList?.map((challenge) => {
+                return (
+                  <Box
+                    key={challenge?.id}
+                    onClick={() => {
+                      setChallengeId(challenge?.id);
+                    }}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      width: "100%",
+                      borderBottom: "1px solid rgb(107, 114, 126)",
+                      cursor: "pointer",
+                      padding: "4px 10px",
+                      "&:hover": {
+                        backgroundColor: "#5d5d5d",
+                      },
+                    }}
+                  >
+                    <div>{challenge?.id}</div>
+                    <div>{challenge?.state}</div>
+                  </Box>
+                )
+              }
+              )
+              }
             </>
           )}
 

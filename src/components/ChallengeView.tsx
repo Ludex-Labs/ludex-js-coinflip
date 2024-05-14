@@ -7,8 +7,8 @@ import Image from "next/image";
 import { useWeb3Auth } from "../services/web3auth";
 
 
-import { Metaplex, keypairIdentity } from "@metaplex-foundation/js";
-import { Connection, clusterApiUrl, Keypair, PublicKey } from "@solana/web3.js";
+import { Metaplex, guestIdentity, keypairIdentity } from "@metaplex-foundation/js";
+import { Connection, clusterApiUrl, Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 // MUI
 import {
@@ -33,9 +33,11 @@ import {
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { AddCircleOutlined } from "@mui/icons-material";
+import { AddCircleOutlined, PlayCircleRounded } from "@mui/icons-material";
 import { TransitionProps } from '@mui/material/transitions';
 import SwapHorizontalCircleIcon from '@mui/icons-material/SwapHorizontalCircle';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { off } from "process";
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -45,14 +47,16 @@ const Transition = forwardRef(function Transition(
 ) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+const mx = Metaplex.make(connection).use(guestIdentity());
 
 export const ChallengeView: FC<{
   challengeId: number;
   setChallengeId: (challengeId: number) => void;
 }> = (props) => {
-  const { challengeId, setChallengeId } = props;
 
-  const { getAccounts, signAndSendTransaction, chain, } = useWeb3Auth();
+  const { challengeId, setChallengeId } = props;
+  const { getAccounts, signAndSendTransaction, chain } = useWeb3Auth();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [playAnimation, setPlayAnimation] = useState<boolean>(false);
@@ -66,6 +70,8 @@ export const ChallengeView: FC<{
   const [solAmount, setSolAmount] = useState<string>('');
 
   const [offerings, setOfferings] = useState<any[]>([]);
+  const [playerStatus, setPlayerStatus] = useState();
+  const [playerStatuses, setPlayerStatuses] = useState<any[]>([]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -80,46 +86,113 @@ export const ChallengeView: FC<{
     if (accounts && accounts.length > 0) setAccount(accounts[0]);
   };
 
+  // Get the account, challenge and offering on load
   useEffect(() => {
     getAccount();
     getChallenge(challengeId, true);
+    getOfferings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // getOfferings 
-  useEffect(() => {
-    if (challenge && challenge.payout.type === 'NFT') {
-      getOfferings();
-    }
-    //TODO - Add a button to accept the offering
-    // acceptOffering();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, challenge]);
 
-  // getPlayerStatus
+  // getPlayerStatuses if challenge type is NFT
   useEffect(() => {
+
+    const getPlayerStatuses = async () => {
+
+      let _playerStatuses: any = [];
+
+      players.map(async (player: any) => {
+        try {
+          var url = "/api/nft/playerStatus";
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              challengeId: challengeId,
+              playerPubkey: player,
+            }),
+          });
+          const res = await response.json();
+          if (res?.code >= 300 || response?.status >= 300) throw res;
+
+          _playerStatuses.push({
+            player: player,
+            status: res
+          });
+
+        } catch (error) {
+          // @ts-ignore
+          if (error?.message) toast.error(JSON.stringify(error.message));
+          else toast.error(JSON.stringify(error));
+          console.error(error);
+        } finally {
+          setIsLoading(false);
+        }
+      });
+
+      setPlayerStatuses(_playerStatuses);
+    };
+
+    if (account && challenge && challenge.payout.type === 'NFT') {
+      getPlayerStatuses();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [challenge]);
+
+
+
+  useEffect(() => {
+
+    const getPlayerStatus = async () => {
+      try {
+        var url = "/api/nft/playerStatus";
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            challengeId: challengeId,
+            playerPubkey: account,
+          }),
+        });
+        const res = await response.json();
+        if (res?.code >= 300 || response?.status >= 300) throw res;
+        console.log('-----------------> <---------------------', res)
+        setPlayerStatus(res);
+      } catch (error) {
+        // @ts-ignore
+        if (error?.message) toast.error(JSON.stringify(error.message));
+        else toast.error(JSON.stringify(error));
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+
+    }
     if (account && challenge && challenge.payout.type === 'NFT') {
       getPlayerStatus();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, challenge]);
 
-  // GET the challenge every 5 seconds
-  useEffect(() => {
-    const fetchChallenge = () => {
-      getChallenge(challengeId, false);
-    };
 
-    fetchChallenge();
-    const intervalId = setInterval(fetchChallenge, 5000);
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [challengeId]);
+  // GET the challenge every 5 seconds
+  // useEffect(() => {
+
+  //   const fetchChallenge = () => {
+  //     getChallenge(challengeId, false);
+  //   };
+
+  //   fetchChallenge();
+  //   const intervalId = setInterval(fetchChallenge, 5000);
+  //   return () => {
+  //     clearInterval(intervalId);
+  //   };
+  // }, [challengeId]);
 
   const getChallenge = async (challengeId: number, force: boolean) => {
     var _force = false;
     if (force) _force = true;
+
     const response = await fetch(
       `/api/challenge?id=${challengeId}&force=${_force}`,
       {
@@ -127,9 +200,10 @@ export const ChallengeView: FC<{
         headers: { "Content-Type": "application/json" },
         body: undefined,
       }
-    );  
+    );
 
     if (response.status === 204) return;
+
     else if (response.status >= 300) {
       toast.error("Error fetching challenge");
       return;
@@ -137,6 +211,7 @@ export const ChallengeView: FC<{
       const challenge = await response.json();
       console.info("challenge", challenge);
       setChallenge(challenge);
+
       if (challenge?.state?.includes("ING")) setIsLoading(true);
       else setIsLoading(false);
     }
@@ -154,7 +229,6 @@ export const ChallengeView: FC<{
     }, 3000);
   };
 
-  // GET the challenge every 5 seconds
   useEffect(() => {
     if (challenge && challenge?.winnings?.length > 0 && !animationPlayed) {
       const winnerAddress = challenge?.winnings.find((winning: any) => {
@@ -311,8 +385,10 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300 || response?.status >= 300) throw res;
-      console.log(res, 'Offerings');
-      setOfferings(res);
+      // Adds metadata to the offerings
+      if (res.length > 0) {
+        setOfferings(res);
+      }
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(JSON.stringify(error.message));
@@ -321,32 +397,6 @@ export const ChallengeView: FC<{
     } finally {
       setIsLoading(false);
     }
-  }
-
-  const getPlayerStatus = async () => {
-    try {
-      var url = "/api/nft/playerStatus";
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          challengeId: challengeId,
-          playerPubkey: account,
-        }),
-      });
-      const res = await response.json();
-      if (res?.code >= 300 || response?.status >= 300) throw res;
-      console.log(res, 'playerStatus');
-
-    } catch (error) {
-      // @ts-ignore
-      if (error?.message) toast.error(JSON.stringify(error.message));
-      else toast.error(JSON.stringify(error));
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-
   }
 
   const acceptOffering = async () => {
@@ -422,10 +472,7 @@ export const ChallengeView: FC<{
 
     if (sig && action == "LEAVE") toast.success("Challenge left!");
     else if (sig && action == "JOIN") toast.success("Challenge joined!");
-    else if (sig && action == "ADD_NFT") {
-      toast.success("NFT added!");
-      getOfferings();
-    }
+    else if (sig && action == "ADD_NFT") toast.success("NFT added!");
     else if (sig && action == "ADD_SOL") toast.success("SOL added!");
     else if (sig && action == "ACCEPT_OFFERING") toast.success("Offering accepted!");
   };
@@ -457,14 +504,15 @@ export const ChallengeView: FC<{
   const resolveNFT = async () => {
     setIsLoading(true);
     try {
+      // Pass In offering.publicKey 
       const response = await fetch(`/api/nft/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           challengeId: challenge?.id,
           payout: [
-            { to: challenge?.players[0], offering: "Bdfk8zDq72Q7cZxBBUbShDdedLVussq6FpG2DUQ7yhp9" },
-            { to: challenge?.players[1], offering: "Giw8tXkQyNQUiJoYaMD4QijCdgxYxgcgqgUgcfM5D4rD" },
+            { to: challenge?.players[0], offering: "Giw8tXkQyNQUiJoYaMD4QijCdgxYxgcgqgUgcfM5D4rD" },
+            { to: challenge?.players[1], offering: "Fh42jtmXZusN3bEoBkUMTBLtJF5kcSvgVwXeEahkZxQL" },
           ]
         }),
       });
@@ -543,7 +591,8 @@ export const ChallengeView: FC<{
   const { players, payout, blockchainAddress, limit, state } = challenge;
 
   console.log(players, 'players');
-
+  console.log(playerStatuses, 'playerStatuses');
+  console.log(playerStatus, 'playerStatus');
 
   return (
     <Box
@@ -598,6 +647,7 @@ export const ChallengeView: FC<{
             <RefreshIcon />
           </IconButton>
         </>
+
         <Box
           sx={{
             border: "1px solid rgb(107, 114, 126)",
@@ -728,36 +778,15 @@ export const ChallengeView: FC<{
 
           )}
 
-          {/* Provider Fee */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
-            <span>Total Rake</span>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-              }}
-            >
-              {parseFloat(payout?.uiValues?.providerRake) +
-                parseFloat(payout?.uiValues?.mediatorRake)}{" "}
-              {payout?.mint?.ticker}
-            </Box>
-          </Box>
-
-          {/* Optionally render mediator and provider fee values IF AVAILABLE */}
-          {payout?.mediatorFee && (
+          {/* Provider + Mediator Rakes in FT and Native */}
+          {payout.type !== 'NFT' && (
             <Box
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
               }}
             >
-              <span>Total Fee</span>
+              <span>Total Rake</span>
               <Box
                 sx={{
                   display: "flex",
@@ -765,15 +794,42 @@ export const ChallengeView: FC<{
                   alignItems: "center",
                 }}
               >
-                {Number(payout?.mediatorFee) + Number(payout?.providerFee)}
-                {" "}
+                {parseFloat(payout?.uiValues?.providerRake) +
+                  parseFloat(payout?.uiValues?.mediatorRake)}{" "}
                 {payout?.mint?.ticker}
               </Box>
             </Box>
 
           )}
 
-          <Divider sx={{ mt: 1, mb: 1 }} />
+          {/* TODO: Enure Provider + Mediator Fee is returned in getChallenge  */}
+          {payout.type == 'NFT' && (
+            <>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span>Total Fee</span>
+                {payout.chain == 'SOLANA' && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                    }}
+                  >
+                    {parseInt(payout?.mediatorFee) + parseInt(payout?.providerFee) / LAMPORTS_PER_SOL}
+                    {" "}
+                    {"SOL"}
+                  </Box>
+                )}
+              </Box>
+              <Divider sx={{ mt: 1, mb: 1 }} />
+            </>
+          )}
+
           {/* Players */}
           <Box
             sx={{
@@ -881,187 +937,162 @@ export const ChallengeView: FC<{
             </Box>
           </Box>
 
-          <Divider sx={{ mt: 1, mb: 2 }} />
-
           {/* Offerings Table */}
           {payout.type == 'NFT' && (
-            <Box sx={{ display: "flex" }}>
+            <>
+              <Divider sx={{ mt: 1, mb: 2 }} />
 
-              <Box
-                sx={{
+              <Box sx={{ display: "flex", alignItems: "self-start" }}>
+
+                <Box sx={{
                   display: "grid",
                   mx: 1,
-                  border: "1px solid rgb(107, 114, 126)",
-                  borderRadius: "6px",
-                  padding: 1.5,
-                  fontSize: "14px",
-                  overflow: "auto",
-                  width: "100%",
-                  minHeight: "100px",
-                }}
-              >
-                {players[0] !== account && offerings.length == 0 && (
-                  <Box sx={{ justifySelf: "center", alignSelf: "center" }}>
-                    <Typography>No Offerings</Typography>
-                  </Box>
-                )}
+                  minHeight: "200px",
+                  minWidth: "200px",
+                }}>
 
-
-                {offerings.map((offering, index) => {
-                  if (offering?.authority !== players[0]) return;
-                  return (
-                    <Box key={offering.mint} sx={{
-                      display: "gird", justifyContent: "space-between", alignItems: "center", p: 2, "&:hover": {
-                        backgroundColor: "#5d5d5d",
-                      },
-                    }}>
-                      <Box sx={{ display: "flex" }}>
-                        <Typography sx={{ mr: 1 }}>
-                          {offering?.mint.substring(0, 5) + "..."}
-                        </Typography>
-                        {/* Button to accept offering  */}
-                        <Button
-                          onClick={() => acceptOffering()}
-                          variant="contained"
-                          size="small"
-                          sx={{
-                            backgroundColor: "#3eb718",
-                            color: "#fff",
-                            fontSize: "12px",
-                            fontWeight: "bold",
-                            borderRadius: "6px",
-                          }}
-                        >
-                          Accept
-                        </Button>
-
-                      </Box>
-                      <span>{offering?.amount}</span>
-                    </Box>
-                  )
-                })}
-
-                {players[0] == account && (
-                  <Box sx={{ justifySelf: "center", alignSelf: "center" }} >
-                    <IconButton
-                      size="small"
-                      onClick={() => {
-                        handleClickOpen();
-                        // toast.success("Refetching challenge!");
-                        // getChallenge(challengeId, true);
-                      }}
-                      sx={{
-                        justifySelf: "center",
-                        alignSelf: "center",
-                        background: "#374151",
-                        border: "1px solid #6b727e",
-                      }}
-                    >
-                      <AddCircleOutlined />
-                    </IconButton>
-                  </Box>
-                )}
-
-              </Box>
-
-              <Box sx={{ justifySelf: "center", alignSelf: "center" }}>
-                <Tooltip title="Swap Offerings" arrow>
-                  <IconButton
-                    disabled={isLoading || challenge.players.length < 2 || offerings.length < 2}
-                    size="small"
-                    onClick={() => {
-                      resolveNFT();
-                      // toast.success("Refetching challenge!");
-                      getChallenge(challengeId, true);
-                    }}
+                  <Box
                     sx={{
-                      justifySelf: "center",
-                      alignSelf: "center",
-                      background: "#374151",
-                      border: "1px solid #6b727e",
+                      display: "grid",
+                      border: "1px solid rgb(107, 114, 126)",
+                      borderRadius: "6px",
+                      padding: 1.5,
+                      fontSize: "14px",
+                      overflow: "auto",
+                      width: "100%",
                     }}
                   >
-                    <SwapHorizontalCircleIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+                    {(offerings.length == 0 || (offerings.filter((offering) => offering.authority != players[0])).length == 0) && (
+                      <Box sx={{ justifySelf: "center", alignSelf: "center" }}>
+                        <Typography>No Offerings</Typography>
+                      </Box>
+                    )}
 
-
-              <Box
-                sx={{
-                  display: "grid",
-                  mx: 1,
-                  border: "1px solid rgb(107, 114, 126)",
-                  borderRadius: "6px",
-                  padding: 1.5,
-                  fontSize: "14px",
-                  overflow: "auto",
-                  width: "100%",
-                  minHeight: "100px",
-                }}
-              >
-                {players[1] !== account && offerings.length == 0 && (
-                  <Box sx={{ justifySelf: "center", alignSelf: "center" }}>
-                    <Typography>No Offerings</Typography>
+                    {offerings.map((offering) => {
+                      // Prevents rendering player 1's offerings on player 0's offering section
+                      if (offering?.authority !== players[0]) return;
+                      return (
+                        <Offering key={offering.mint} offering={offering} />)
+                    })}
                   </Box>
-                )}
 
-                {offerings.map((offering, index) => {
-                  if (offering?.authority !== players[1]) return;
-                  return (
-                    <Box key={offering.mint} sx={{
-                      display: "gird", justifyContent: "space-between", alignItems: "center", p: 2, "&:hover": {
-                        backgroundColor: "#5d5d5d",
-                      },
-                    }}>
-                      <Box sx={{ display: "flex" }}>
-                        <Typography sx={{ mr: 1 }}>
-                          {offering?.mint.substring(0, 5) + "..."}
-                        </Typography>
-                        {/* Button to accept offering  */}
-                        <Button
-                          onClick={() => acceptOffering()}
-                          variant="contained"
+                </Box>
+
+                <Box sx={{ justifySelf: "center", alignSelf: "center", display: "grid" }}>
+                  <>
+                    <Tooltip title="Swap Offerings" arrow>
+                      <Box>
+                        <IconButton
+                          disabled={isLoading || challenge.players.length < 2 || offerings.length < 2 || playerStatuses.some((player) => player.status != "ACCEPTED")}
                           size="small"
+                          onClick={() => {
+                            resolveNFT();
+                            // toast.success("Refetching challenge!");
+
+                          }}
                           sx={{
-                            backgroundColor: "#3eb718",
-                            color: "#fff",
-                            fontSize: "12px",
-                            fontWeight: "bold",
-                            borderRadius: "6px",
+                            justifySelf: "center",
+                            alignSelf: "center",
+                            background: "#374151",
+                            border: "1px solid #6b727e",
                           }}
                         >
-                          Accept
-                        </Button>
-
+                          <SwapHorizontalCircleIcon />
+                        </IconButton>
                       </Box>
-                      <span>{offering?.amount}</span>
-                    </Box>
-                  )
-                })}
-                {players[1] == account && (
-                  <Box sx={{ justifySelf: "center", alignSelf: "center" }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => {
-                        handleClickOpen();
+                    </Tooltip>
 
-                        // toast.success("Refetching challenge!");
-                        // getChallenge(challengeId, true);
-                      }}
-                      sx={{
-                        justifySelf: "center",
-                        alignSelf: "center",
-                        background: "#374151",
-                        border: "1px solid #6b727e",
-                      }}
-                    >
-                      <AddCircleOutlined />
-                    </IconButton>
+
+                    {/* Add Offerings Button */}
+                    {players.includes(account) && playerStatus == "JOINED" && (
+                      <Tooltip title="Add Offerings" arrow>
+                        <Box sx={{ justifySelf: "center", alignSelf: "center", my: 2 }} >
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              handleClickOpen();
+                              // toast.success("Refetching challenge!");
+                              // getChallenge(challengeId, true);
+                            }}
+                            sx={{
+                              justifySelf: "center",
+                              alignSelf: "center",
+                              background: "#374151",
+                              border: "1px solid #6b727e",
+                            }}
+                          >
+                            <AddCircleOutlined />
+                          </IconButton>
+                        </Box>
+                      </Tooltip>
+                    )}
+
+                    {/* Accept Offering Button */}
+                    {players.includes(account) && offerings.some(offering => offering.authority === account) && playerStatuses.length > 0 && playerStatuses.some((player) => player.player == account && player.status == "JOINED") && (
+                      <Box sx={{ justifySelf: "center", alignSelf: "center", display: "flex" }}>
+                        <Tooltip title="Confirm Offering" arrow>
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              acceptOffering();
+                              toast.success("Confirmed Offering!");
+                            }}
+                            sx={{
+                              justifySelf: "center",
+                              alignSelf: "center",
+                              background: "green",
+                              border: "1px solid #6b727e",
+                            }}
+                          >
+                            <CheckCircleOutlineIcon />
+                          </IconButton>
+
+                        </Tooltip>
+                      </Box>
+                    )}
+                  </> 
+                </Box>
+
+
+                <Box sx={{
+                  display: "grid",
+                  mx: 1,
+                  minHeight: "200px",
+                  minWidth: "200px",
+                }}>
+
+                  <Box
+                    sx={{
+                      display: "grid",
+                      border: "1px solid rgb(107, 114, 126)",
+                      borderRadius: "6px",
+                      padding: 1.5,
+                      fontSize: "14px",
+                      overflow: "auto",
+                      width: "100%",
+
+                    }}
+                  >
+
+                    {(offerings.length == 0 || (offerings.filter((offering) => offering.authority != players[1])).length == 0) && (
+                      <Box sx={{ justifySelf: "center", alignSelf: "center" }}>
+                        <Typography>No Offerings</Typography>
+                      </Box>
+                    )}
+
+                    {offerings.map((offering) => {
+                      // Prevents rendering player 0's offerings on player 1's offering section
+                      if (offering?.authority !== players[1]) return;
+                      return (
+                        <Offering key={offering.mint} offering={offering} />)
+                    })}
+
                   </Box>
-                )}
+
+                </Box>
+
               </Box>
-            </Box>
+            </>
           )}
 
         </Box>
@@ -1151,24 +1182,6 @@ export const ChallengeView: FC<{
             alignItems: "center",
           }}
         >
-          {/* Swap Offerings */}
-          {/* <Button
-            className="btn"
-            fullWidth
-            variant="contained"
-            size="large"
-            disabled={isLoading || challenge.players.length < 2 || offerings.length < 2}
-            sx={{
-              backgroundColor: "#3eb718",
-              mt: 1,
-            }}
-            onClick={() =>
-              // 
-              console.log('Swap Offerings')
-            }
-          >
-            Swap
-          </Button> */}
           {/* Cancel Game */}
           <Button
             className="btn"
@@ -1187,7 +1200,7 @@ export const ChallengeView: FC<{
         </Box>
       )}
 
-      {/* Add Offering Dialog */}
+      {/* Add New Offerings Dialog */}
       <Dialog
         sx={{
         }}
@@ -1314,3 +1327,49 @@ export const ChallengeView: FC<{
     </Box>
   );
 };
+
+
+const Offering = ({ offering }: any) => {
+
+  const [metadata, setMetadata] = useState<any>();
+
+  useEffect(() => {
+    const getOfferingMetadata = async (mint: string) => {
+      let _metadata;
+      const nft = await mx
+        .nfts()
+        .findByMint({ mintAddress: new PublicKey(mint) });
+      const response = await fetch(nft?.uri);
+      _metadata = await response.json();
+      setMetadata(_metadata);
+    }
+    getOfferingMetadata(offering.mint);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offering]);
+
+  return (
+    <>
+      <Box key={offering.mint}
+        sx={{
+          display: "grid",
+        }}>
+        {metadata?.image && (
+          <Tooltip title={metadata?.name} arrow>
+            <Image
+              style={{
+                justifySelf: "center",
+                alignSelf: "center",
+              }}
+              src={metadata?.image}
+              alt="NFT"
+              width={150}
+              height={150}
+            />
+          </Tooltip>
+        )}
+      </Box>
+    </>
+  )
+
+}
+
