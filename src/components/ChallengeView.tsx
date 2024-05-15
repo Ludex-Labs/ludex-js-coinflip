@@ -1045,11 +1045,11 @@ export const ChallengeView: FC<{
 
 
                     {/* Add Offerings Button */}
-                    {players.includes(account) && playerStatus == "JOINED" && (
                       <Tooltip title="Add an NFT" arrow>
                         <Box sx={{ justifySelf: "center", alignSelf: "center", my: 2 }} >
                           <IconButton
                             size="small"
+                            disabled={!players.includes(account) && playerStatus != "JOINED"}
                             onClick={() => {
                               handleClickOpen();
                               // toast.success("Refetching challenge!");
@@ -1066,34 +1066,31 @@ export const ChallengeView: FC<{
                           </IconButton>
                         </Box>
                       </Tooltip>
-                    )}
 
-                    {/* Accept Offering Button */}
-                    {players.includes(account) && offerings.some(offering => offering.authority === account) && playerStatuses.length > 0 && playerStatuses.some((player) => player.player == account && player.status == "JOINED") && (
-                      <Box sx={{ justifySelf: "center", alignSelf: "center", display: "flex" }}>
-                        <Tooltip title="Lock" arrow>
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              acceptOffering();
-                              toast.success("Confirmed Offering!");
-                            }}
-                            sx={{
-                              justifySelf: "center",
-                              alignSelf: "center",
-                              border: "1px solid #6b727e",
-                              background: "#374151",
-                            }}
-                          >
-                            <LockOutlined />
-                          </IconButton>
+                    {/* Lock(ACCEPT) Offering Button */}
+                    <Box sx={{ justifySelf: "center", alignSelf: "center", display: "flex" }}>
+                      <Tooltip title="Lock" arrow>
+                        <IconButton
+                          size="small"
+                          disabled={!players.includes(account) || !offerings.some(offering => offering.authority === account) || playerStatuses.length < 0 || playerStatuses.some((player) => player.player == account && player.status != "JOINED")}
+                          onClick={() => {
+                            acceptOffering();
+                            toast.success("Confirmed Offering!");
+                          }}
+                          sx={{
+                            justifySelf: "center",
+                            alignSelf: "center",
+                            border: "1px solid #6b727e",
+                            background: "#374151",
+                          }}
+                        >
+                          <LockOutlined />
+                        </IconButton>
 
-                        </Tooltip>
-                      </Box>
-                    )}
+                      </Tooltip>
+                    </Box>
                   </>
                 </Box>
-
 
                 <Box sx={{
                   display: "grid",
