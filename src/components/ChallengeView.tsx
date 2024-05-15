@@ -33,7 +33,7 @@ import {
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { AddCircleOutlined, PlayCircleRounded } from "@mui/icons-material";
+import { AddCircleOutlined, LockOutlined } from "@mui/icons-material";
 import { TransitionProps } from '@mui/material/transitions';
 import SwapHorizontalCircleIcon from '@mui/icons-material/SwapHorizontalCircle';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -1021,7 +1021,7 @@ export const ChallengeView: FC<{
 
                 <Box sx={{ justifySelf: "center", alignSelf: "center", display: "grid" }}>
                   <>
-                    <Tooltip title="Swap Offerings" arrow>
+                    <Tooltip title="Swap" arrow>
                       <Box>
                         <IconButton
                           disabled={isLoading || challenge.players.length < 2 || offerings.length < 2 || playerStatuses.some((player) => player.status != "ACCEPTED")}
@@ -1071,7 +1071,7 @@ export const ChallengeView: FC<{
                     {/* Accept Offering Button */}
                     {players.includes(account) && offerings.some(offering => offering.authority === account) && playerStatuses.length > 0 && playerStatuses.some((player) => player.player == account && player.status == "JOINED") && (
                       <Box sx={{ justifySelf: "center", alignSelf: "center", display: "flex" }}>
-                        <Tooltip title="Confirm Offering" arrow>
+                        <Tooltip title="Lock Assets" arrow>
                           <IconButton
                             size="small"
                             onClick={() => {
@@ -1081,11 +1081,11 @@ export const ChallengeView: FC<{
                             sx={{
                               justifySelf: "center",
                               alignSelf: "center",
-                              background: "green",
-                              border: "1px solid #6b727e",
+                              border: "1px solid #6b727e",  
+                              background: "#374151",  
                             }}
                           >
-                            <CheckCircleOutlineIcon />
+                            <LockOutlined />
                           </IconButton>
 
                         </Tooltip>
