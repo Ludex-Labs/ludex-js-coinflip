@@ -86,14 +86,46 @@ export const ChallengeView: FC<{
     if (accounts && accounts.length > 0) setAccount(accounts[0]);
   };
 
-  // Get the account, challenge and offering on load
+  const getNFTChallenge = async () => {
+
+    const response = await fetch(
+      `/api/nft/getNFTChallenge`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: challengeId,
+          playerPubkey: account,
+          amount: parseFloat(solAmount),
+        }),
+      }
+    );
+
+    if (response.status === 204) return;
+
+    else if (response.status >= 300) {
+      toast.error("Error fetching challenge");
+      return;
+    }
+
+    else {
+      const NFTChallenge = await response.json();
+      console.info("NFTChallenge", NFTChallenge);
+      setChallenge(NFTChallenge);
+    }
+  };
+
+  // Get the Challenge & NFT Challenge on load
   useEffect(() => {
-    getAccount();
+    getNFTChallenge();
     getChallenge(challengeId, true);
-    getOfferings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Get the account on load
+  useEffect(() => {
+    getAccount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // getPlayerStatuses if challenge type is NFT
   useEffect(() => {
@@ -138,10 +170,9 @@ export const ChallengeView: FC<{
       getPlayerStatuses();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [challenge]);
+  }, [account, challenge]);
 
-
-
+  // Gets account player status and offerings
   useEffect(() => {
 
     const getPlayerStatus = async () => {
@@ -174,6 +205,17 @@ export const ChallengeView: FC<{
       getOfferings();
     }
   }, [account, challenge]);
+
+  // Displays the animation if the challenge is resolved
+  useEffect(() => {
+    if (challenge && challenge?.winnings?.length > 0 && !animationPlayed) {
+      const winnerAddress = challenge?.winnings.find((winning: any) => {
+        return winning.amount !== "0";
+      })?.to;
+      if (winnerAddress) displayAnimation(winnerAddress);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [challenge]);
 
 
   // GET the challenge every 5 seconds
@@ -229,16 +271,6 @@ export const ChallengeView: FC<{
         toast.success("Player " + winnerAddress.substring(0, 10) + " won!");
     }, 3000);
   };
-
-  useEffect(() => {
-    if (challenge && challenge?.winnings?.length > 0 && !animationPlayed) {
-      const winnerAddress = challenge?.winnings.find((winning: any) => {
-        return winning.amount !== "0";
-      })?.to;
-      if (winnerAddress) displayAnimation(winnerAddress);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [challenge]);
 
   const joinChallenge = async () => {
     setIsLoading(true);
@@ -491,6 +523,7 @@ export const ChallengeView: FC<{
       const res = await response.json();
       if (res?.code >= 300) throw res;
       displayAnimation(res?.winnerAddress);
+      // Always get non NFT challenge after starting the game
       getChallenge(challengeId, true);
     } catch (error) {
       // @ts-ignore
@@ -532,7 +565,13 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
-      getChallenge(challengeId, true);
+      if(challenge && challenge.Payout.type === 'NFT'){
+        getNFTChallenge();
+      }
+      else if(challenge && challenge.Payout.type != 'NFT'){
+        getChallenge(challengeId, true);
+      }
+      // getChallenge(challengeId, true);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(error.message);
@@ -554,6 +593,7 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
+      // Always get non NFT challenge after cancelGame
       getChallenge(challengeId, true);
     } catch (error) {
       // @ts-ignore
@@ -575,7 +615,8 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
-      getChallenge(challengeId, true);
+      // Always get NFT challenge after cancelNFT
+      getNFTChallenge();
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(error.message);
@@ -642,7 +683,8 @@ export const ChallengeView: FC<{
             size="small"
             onClick={() => {
               toast.success("Refetching challenge!");
-              getChallenge(challengeId, true);
+              if (payout.type == 'NFT') getNFTChallenge();
+              else getChallenge(challengeId, true);
             }}
             sx={{
               display: "flex",
@@ -1045,27 +1087,27 @@ export const ChallengeView: FC<{
 
 
                     {/* Add Offerings Button */}
-                      <Tooltip title="Add an NFT" arrow>
-                        <Box sx={{ justifySelf: "center", alignSelf: "center", my: 2 }} >
-                          <IconButton
-                            size="small"
-                            disabled={!players.includes(account) && playerStatus != "JOINED"}
-                            onClick={() => {
-                              handleClickOpen();
-                              // toast.success("Refetching challenge!");
-                              // getChallenge(challengeId, true);
-                            }}
-                            sx={{
-                              justifySelf: "center",
-                              alignSelf: "center",
-                              background: "#374151",
-                              border: "1px solid #6b727e",
-                            }}
-                          >
-                            <AddCircleOutlined />
-                          </IconButton>
-                        </Box>
-                      </Tooltip>
+                    <Tooltip title="Add an NFT" arrow>
+                      <Box sx={{ justifySelf: "center", alignSelf: "center", my: 2 }} >
+                        <IconButton
+                          size="small"
+                          disabled={!players.includes(account) && playerStatus != "JOINED"}
+                          onClick={() => {
+                            handleClickOpen();
+                            // toast.success("Refetching challenge!");
+                            // getChallenge(challengeId, true);
+                          }}
+                          sx={{
+                            justifySelf: "center",
+                            alignSelf: "center",
+                            background: "#374151",
+                            border: "1px solid #6b727e",
+                          }}
+                        >
+                          <AddCircleOutlined />
+                        </IconButton>
+                      </Box>
+                    </Tooltip>
 
                     {/* Lock(ACCEPT) Offering Button */}
                     <Box sx={{ justifySelf: "center", alignSelf: "center", display: "flex" }}>
