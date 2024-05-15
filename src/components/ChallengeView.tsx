@@ -978,16 +978,16 @@ export const ChallengeView: FC<{
                       maxHeight: "200px",
                       '&::-webkit-scrollbar': {
                         width: '10px',
-                    },
-                    '&::-webkit-scrollbar-track': {
+                      },
+                      '&::-webkit-scrollbar-track': {
                         background: 'orange',
-                    },
-                    '&::-webkit-scrollbar-thumb': {
+                      },
+                      '&::-webkit-scrollbar-thumb': {
                         background: '#888',
-                    },
-                    '&::-webkit-scrollbar-thumb:hover': {
+                      },
+                      '&::-webkit-scrollbar-thumb:hover': {
                         background: '#555',
-                    },
+                      },
                     }}
                   >
                     {offerings.filter((offering) => offering.authority == players[0]).length == 0 && (
@@ -1081,8 +1081,8 @@ export const ChallengeView: FC<{
                             sx={{
                               justifySelf: "center",
                               alignSelf: "center",
-                              border: "1px solid #6b727e",  
-                              background: "#374151",  
+                              border: "1px solid #6b727e",
+                              background: "#374151",
                             }}
                           >
                             <LockOutlined />
@@ -1116,17 +1116,17 @@ export const ChallengeView: FC<{
                       maxHeight: "200px",
                       '&::-webkit-scrollbar': {
                         width: '10px',
-                    },
-                    '&::-webkit-scrollbar-track': {
+                      },
+                      '&::-webkit-scrollbar-track': {
                         background: 'orange',
-                    },
-                    '&::-webkit-scrollbar-thumb': {
+                      },
+                      '&::-webkit-scrollbar-thumb': {
                         background: '#888',
-                    },
-                    '&::-webkit-scrollbar-thumb:hover': {
+                      },
+                      '&::-webkit-scrollbar-thumb:hover': {
                         background: '#555',
-                    },
-            
+                      },
+
                     }}
                   >
 
@@ -1395,8 +1395,6 @@ export const ChallengeView: FC<{
 
 
 const NFTOffering = ({ offering }: any) => {
-
-  console.log(offering, 'offering');
   const [metadata, setMetadata] = useState<any>();
 
   useEffect(() => {
@@ -1443,7 +1441,7 @@ const SolOffering = ({ offering }: any) => {
         display: "flex",
         justifyContent: "center",
         alignSelf: "center",
-        p:4,
+        p: 4,
         my: 1,
         borderRadius: "6px",
         border: "1px solid #6b727e",
@@ -1463,9 +1461,8 @@ const SolOffering = ({ offering }: any) => {
         alignSelf: "center",
         fontSize: "14px",
         fontWeight: "bold",
-        
       }}>
-        {parseInt(offering.amount) / LAMPORTS_PER_SOL} SOL
+        {offering.uiAmount} SOL
       </Typography>
     </Box>
 
