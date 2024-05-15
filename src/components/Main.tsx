@@ -17,15 +17,22 @@ interface IProps {
 const Main = ({ setChain, isCypress, displayWallet, setDisplayWallet }: IProps) => {
   const { provider, login } = useWeb3Auth();
   const [challengeId, setChallengeId] = useState<number>(0);
-
+  const [challengeType, setChallengeType] = useState<string>("Native Token");
   const loggedInView = (
     <>
       {challengeId == 0 ? (
-        <ChallengesView setChallengeId={setChallengeId} isCypress={isCypress} setChain={setChain} />
+        <ChallengesView
+         setChallengeId={setChallengeId} 
+         isCypress={isCypress}
+          setChain={setChain}
+          setChallengeType={setChallengeType}
+          challengeType={challengeType}
+          />
       ) : (
         <ChallengeView
           challengeId={challengeId}
           setChallengeId={setChallengeId}
+          challengeType={challengeType}
         />
       )}
       <Button

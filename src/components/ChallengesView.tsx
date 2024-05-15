@@ -36,6 +36,8 @@ interface IProps {
   setChallengeId: (challengeId: number) => void;
   setChain?: (chain: CHAIN_CONFIG_TYPE) => void;
   isCypress?: boolean
+  challengeType: string;
+  setChallengeType: (challengeType: string) => void;
 }
 
 const challengeTypes = [
@@ -44,7 +46,7 @@ const challengeTypes = [
   'NFT',
 ]
 
-export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) {
+export function ChallengesView({ setChallengeId, isCypress, setChain, challengeType, setChallengeType }: IProps) {
   const { chain, signAndSendTransaction } = useWeb3Auth();
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -52,7 +54,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
   const [payouts, setPayouts] = useState<any[]>([]);
   const [hideCompleted, setHideCompleted] = useState<boolean>(true);
   const [createChallengeModal, setCreateChallengeModal] = useState<boolean>(false);
-  const [challengeType, setChallengeType] = useState<string>("Native Token");
+  // const [challengeType, setChallengeType] = useState<string>("Native Token");
   const [activePayoutId, setActivePayoutId] = useState<any>(null);
 
   const [sortAttribute, setSortAttribute] = useState('id');
@@ -421,7 +423,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain }: IProps) 
     </>
   );
 
-  
+
   return (
     <Box sx={{ width: "100%" }}>
       <Typography

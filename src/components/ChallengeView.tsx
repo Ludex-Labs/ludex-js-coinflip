@@ -53,9 +53,10 @@ const mx = Metaplex.make(connection).use(guestIdentity());
 export const ChallengeView: FC<{
   challengeId: number;
   setChallengeId: (challengeId: number) => void;
+  challengeType: string;
 }> = (props) => {
 
-  const { challengeId, setChallengeId } = props;
+  const { challengeId, setChallengeId, challengeType } = props;
   const { getAccounts, signAndSendTransaction, chain } = useWeb3Auth();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -117,8 +118,12 @@ export const ChallengeView: FC<{
 
   // Get the Challenge & NFT Challenge on load
   useEffect(() => {
-    getNFTChallenge();
-    getChallenge(challengeId, true);
+    if (challengeType === 'NFT') {
+      getNFTChallenge();
+    }
+    else {
+      getChallenge(challengeId, true);
+    }
   }, []);
 
   // Get the account on load
@@ -565,13 +570,12 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300) throw res;
-      if(challenge && challenge.Payout.type === 'NFT'){
+      if (challengeType === 'NFT') {
         getNFTChallenge();
       }
-      else if(challenge && challenge.Payout.type != 'NFT'){
+      else {
         getChallenge(challengeId, true);
       }
-      // getChallenge(challengeId, true);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(error.message);
@@ -643,7 +647,11 @@ export const ChallengeView: FC<{
     );
   }
 
-  const { players, payout, blockchainAddress, limit, state } = challenge;
+  const { players, payout, blockchainAddress, state } = challenge;
+
+  console.log('state', state);
+
+  console.log('payout', payout);
 
   return (
     <Box
@@ -683,8 +691,12 @@ export const ChallengeView: FC<{
             size="small"
             onClick={() => {
               toast.success("Refetching challenge!");
-              if (payout.type == 'NFT') getNFTChallenge();
-              else getChallenge(challengeId, true);
+              if (challengeType === 'NFT') {
+                getNFTChallenge();
+              }
+              else {
+                getChallenge(challengeId, true);
+              }
             }}
             sx={{
               display: "flex",
@@ -872,9 +884,22 @@ export const ChallengeView: FC<{
                       alignItems: "center",
                     }}
                   >
-                    {parseInt(payout?.mediatorFee) + parseInt(payout?.providerFee) / LAMPORTS_PER_SOL}
-                    {" "}
-                    {"SOL"}
+                    {challengeType === 'NFT' && (
+                      <>
+                        {parseFloat(payout?.uiValues.mediatorFee) + parseFloat(payout?.uiValues.providerFee) }
+                        {" "}
+                        {"SOL"}
+                      </>
+                    )}
+
+                    {challengeType !== 'NFT' && (
+                      <>
+                        {parseFloat(payout?.uiValues.providerRake) + parseFloat(payout?.uiValues.mediatorRake) }
+                        {" "}
+                        {"SOL"}
+                      </>
+                    )}
+
                   </Box>
                 )}
               </Box>
@@ -891,7 +916,7 @@ export const ChallengeView: FC<{
             }}
           >
             <Box sx={{ mb: 1 }}>
-              Players ({players?.length}/{limit})
+              Players ({players?.length}/{challenge.payout.limit})
             </Box>
 
             <Box
@@ -1032,8 +1057,8 @@ export const ChallengeView: FC<{
                       },
                     }}
                   >
-                    {offerings.filter((offering) => offering.authority == players[0]).length == 0 && (
-                      <Box onClick={() => {
+                    {players < 2 || state != "CREATED" && offerings.filter((offering) => offering.authority == players[0]).length == 0 && (
+                      <Box key={account} onClick={() => {
                         if (account == players[0])
                           handleClickOpen();
                       }} sx={{ justifySelf: "center", alignSelf: "center", cursor: "pointer" }}>
@@ -1066,7 +1091,7 @@ export const ChallengeView: FC<{
                     <Tooltip title="Swap" arrow>
                       <Box>
                         <IconButton
-                          disabled={isLoading || challenge.players.length < 2 || offerings.length < 2 || playerStatuses.some((player) => player.status != "ACCEPTED")}
+                          disabled={isLoading || challenge.state !== "CREATED" || challenge.players.length < 2 || offerings.length < 2 || playerStatuses.some((player) => player.status != "ACCEPTED")}
                           size="small"
                           onClick={() => {
                             resolveNFT();
@@ -1091,11 +1116,9 @@ export const ChallengeView: FC<{
                       <Box sx={{ justifySelf: "center", alignSelf: "center", my: 2 }} >
                         <IconButton
                           size="small"
-                          disabled={!players.includes(account) && playerStatus != "JOINED"}
+                          disabled={(!players.includes(account) || playerStatus != "JOINED") || playerStatus == "ACCEPTED"}
                           onClick={() => {
                             handleClickOpen();
-                            // toast.success("Refetching challenge!");
-                            // getChallenge(challengeId, true);
                           }}
                           sx={{
                             justifySelf: "center",
@@ -1169,7 +1192,7 @@ export const ChallengeView: FC<{
                     }}
                   >
 
-                    {(players < 2 || offerings.filter((offering) => offering.authority == players[1]).length == 0) && (
+                    {(players < 2 && state != "CREATED" && offerings.filter((offering) => offering.authority == players[1]).length == 0) && (
                       <Box onClick={() => {
                         if (account == players[1])
                           handleClickOpen();
@@ -1177,6 +1200,7 @@ export const ChallengeView: FC<{
                         <Typography>{account == players[1] ? "Add an NFT/SOL" : ""}</Typography>
                       </Box>
                     )}
+
                     {offerings.map((offering) => {
                       // Prevents rendering player 0's offerings on player 1's offering section
                       if (offering?.authority !== players[1]) return;
@@ -1292,7 +1316,7 @@ export const ChallengeView: FC<{
             fullWidth
             variant="contained"
             size="large"
-            disabled={isLoading || (state !== "CREATED" && state !== "LOCKED")}
+            disabled={isLoading || (state !== "CREATED")}
             sx={{
               backgroundColor: "#f45252",
               mt: 1,
