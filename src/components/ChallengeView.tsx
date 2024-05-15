@@ -1071,7 +1071,7 @@ export const ChallengeView: FC<{
                     {/* Accept Offering Button */}
                     {players.includes(account) && offerings.some(offering => offering.authority === account) && playerStatuses.length > 0 && playerStatuses.some((player) => player.player == account && player.status == "JOINED") && (
                       <Box sx={{ justifySelf: "center", alignSelf: "center", display: "flex" }}>
-                        <Tooltip title="Lock Assets" arrow>
+                        <Tooltip title="Lock" arrow>
                           <IconButton
                             size="small"
                             onClick={() => {
