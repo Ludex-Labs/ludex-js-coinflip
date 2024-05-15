@@ -171,6 +171,7 @@ export const ChallengeView: FC<{
     }
     if (account && challenge && challenge.payout.type === 'NFT') {
       getPlayerStatus();
+      getOfferings();
     }
   }, [account, challenge]);
 
@@ -501,7 +502,7 @@ export const ChallengeView: FC<{
     }
   };
 
-  const resolveNFT = async () => {  
+  const resolveNFT = async () => {
     setIsLoading(true);
     try {
       // Prepare payout object
@@ -956,24 +957,45 @@ export const ChallengeView: FC<{
                 <Box sx={{
                   display: "grid",
                   mx: 1,
-                  minHeight: "200px",
                   minWidth: "200px",
+                  minHeight: "200px",
+                  maxHeight: "200px",
+
                 }}>
 
                   <Box
                     sx={{
                       display: "grid",
-                      border: "1px solid rgb(107, 114, 126)",
+                      border: `${account == players[0] ? '1px solid orange' : '1px solid rgb(107, 114, 126)'}`,
                       borderRadius: "6px",
                       padding: 1.5,
                       fontSize: "14px",
-                      overflow: "auto",
                       width: "100%",
+                      opacity: `${account == players[0] ? '1' : '0.6'}`,
+                      background: `${account == players[0] ? 'tranparent' : offerings.includes((offering: any) => offering.player == players[0]) ? "transparent" : "grey"}`,
+                      overflowY: "auto",
+                      minHeight: "200px",
+                      maxHeight: "200px",
+                      '&::-webkit-scrollbar': {
+                        width: '10px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                        background: 'orange',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        background: '#888',
+                    },
+                    '&::-webkit-scrollbar-thumb:hover': {
+                        background: '#555',
+                    },
                     }}
                   >
                     {offerings.filter((offering) => offering.authority == players[0]).length == 0 && (
-                      <Box sx={{ justifySelf: "center", alignSelf: "center" }}>
-                        <Typography>No Offerings</Typography>
+                      <Box onClick={() => {
+                        if (account == players[0])
+                          handleClickOpen();
+                      }} sx={{ justifySelf: "center", alignSelf: "center", cursor: "pointer" }}>
+                        <Typography>{account == players[0] ? "Add an NFT/SOL" : ""}</Typography>
                       </Box>
                     )}
 
@@ -982,7 +1004,11 @@ export const ChallengeView: FC<{
                       if (offering?.authority !== players[0]) return;
                       if (offering.mint) {
                         return (
-                          <NFTOffering key={offering.mint} offering={offering} />)
+                          <>
+                            <NFTOffering key={offering.mint} offering={offering} />
+                            <Divider sx={{ mt: 1, mb: 1, color: "orange" }} />
+                          </>
+                        )
                       }
                       else {
                         return (
@@ -1020,7 +1046,7 @@ export const ChallengeView: FC<{
 
                     {/* Add Offerings Button */}
                     {players.includes(account) && playerStatus == "JOINED" && (
-                      <Tooltip title="Add Offerings" arrow>
+                      <Tooltip title="Add an NFT" arrow>
                         <Box sx={{ justifySelf: "center", alignSelf: "center", my: 2 }} >
                           <IconButton
                             size="small"
@@ -1072,29 +1098,46 @@ export const ChallengeView: FC<{
                 <Box sx={{
                   display: "grid",
                   mx: 1,
-                  minHeight: "200px",
                   minWidth: "200px",
                 }}>
 
                   <Box
                     sx={{
                       display: "grid",
-                      border: "1px solid rgb(107, 114, 126)",
+                      border: `${account == players[1] ? '1px solid orange' : '1px solid rgb(107, 114, 126)'}`,
                       borderRadius: "6px",
                       padding: 1.5,
                       fontSize: "14px",
-                      overflow: "auto",
                       width: "100%",
-
+                      opacity: `${account == players[1] ? '1' : '0.6'}`,
+                      background: `${account == players[1] ? 'tranparent' : offerings.includes((offering: any) => offering.player == players[1]) ? "transparent" : "grey"}`,
+                      overflowY: "auto",
+                      minHeight: "200px",
+                      maxHeight: "200px",
+                      '&::-webkit-scrollbar': {
+                        width: '10px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                        background: 'orange',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        background: '#888',
+                    },
+                    '&::-webkit-scrollbar-thumb:hover': {
+                        background: '#555',
+                    },
+            
                     }}
                   >
 
                     {(players < 2 || offerings.filter((offering) => offering.authority == players[1]).length == 0) && (
-                      <Box sx={{ justifySelf: "center", alignSelf: "center" }}>
-                        <Typography>No Offerings</Typography>
+                      <Box onClick={() => {
+                        if (account == players[1])
+                          handleClickOpen();
+                      }} sx={{ justifySelf: "center", alignSelf: "center", cursor: "pointer" }}>
+                        <Typography>{account == players[1] ? "Add an NFT/SOL" : ""}</Typography>
                       </Box>
                     )}
-
                     {offerings.map((offering) => {
                       // Prevents rendering player 0's offerings on player 1's offering section
                       if (offering?.authority !== players[1]) return;
@@ -1232,14 +1275,14 @@ export const ChallengeView: FC<{
         onClose={handleClose}
         aria-describedby="alert-dialog-slide-description"
       >
-        <DialogTitle sx={{ background: "#2f3140" }}>{"Add an Offering"}</DialogTitle>
+        <DialogTitle sx={{ background: "#2f3140" }}>{"Trade"}</DialogTitle>
         <DialogContent sx={{ background: "#2f3140", minWidth: "500px" }}>
 
           <FormControl fullWidth sx={{ display: 'flex', my: 2 }}>
-            <InputLabel>Offering</InputLabel>
+            <InputLabel>Asset</InputLabel>
             <Select
               value={OfferingType}
-              label="Select Offering Type"
+              label="Select Asset Type"
               onChange={(event) => {
                 setOfferingType(event.target.value);
               }}
@@ -1371,40 +1414,60 @@ const NFTOffering = ({ offering }: any) => {
   }, [offering]);
 
   return (
-      <Box 
-        sx={{
-          display: "grid",
-        }}>
-        {metadata?.image && (
-          <Tooltip title={metadata?.name} arrow>
-            <Image
-              style={{
-                justifySelf: "center",
-                alignSelf: "center",
-              }}
-              src={metadata?.image}
-              alt="NFT"
-              width={150}
-              height={150}
-            />
-          </Tooltip>
-        )}
-      </Box>
+    <Box
+      sx={{
+        display: "grid",
+      }}>
+      {metadata?.image && (
+        <Tooltip title={metadata?.name} arrow>
+          <Image
+            style={{
+              justifySelf: "center",
+              alignSelf: "center",
+            }}
+            src={metadata?.image}
+            alt="NFT"
+            width={150}
+            height={150}
+          />
+        </Tooltip>
+      )}
+    </Box>
   )
 }
 const SolOffering = ({ offering }: any) => {
 
   return (
-      <Box 
-        sx={{
-          display: "grid",
-        }}>
-        <Typography sx={{
-          justifySelf: "center",
-          alignSelf: "center",
-        }}>
-          {parseInt(offering.amount) / LAMPORTS_PER_SOL} SOL
-        </Typography>
-      </Box>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignSelf: "center",
+        p:4,
+        my: 1,
+        borderRadius: "6px",
+        border: "1px solid #6b727e",
+      }}>
+      <Image
+        alt="SOL"
+        src={"/SOL.svg"}
+        width={18}
+        height={18}
+        style={{
+          marginRight: "7px",
+        }}
+      />
+
+      <Typography sx={{
+        justifySelf: "center",
+        alignSelf: "center",
+        fontSize: "14px",
+        fontWeight: "bold",
+        
+      }}>
+        {parseInt(offering.amount) / LAMPORTS_PER_SOL} SOL
+      </Typography>
+    </Box>
+
   );
 }
