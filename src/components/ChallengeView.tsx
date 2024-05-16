@@ -649,10 +649,6 @@ export const ChallengeView: FC<{
 
   const { players, payout, blockchainAddress, state } = challenge;
 
-  console.log('state', state);
-
-  console.log('payout', payout);
-
   return (
     <Box
       sx={{
@@ -668,6 +664,24 @@ export const ChallengeView: FC<{
       </Typography>
 
       <Box sx={{ position: "relative" }}>
+        {/* Add loading spinner  */}
+        {challenge.state.includes("ING") && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              background: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )}
         {/* Icons Go back and refetch Challenge*/}
         <>
           <IconButton
@@ -886,7 +900,7 @@ export const ChallengeView: FC<{
                   >
                     {challengeType === 'NFT' && (
                       <>
-                        {parseFloat(payout?.uiValues.mediatorFee) + parseFloat(payout?.uiValues.providerFee) }
+                        {parseFloat(payout?.uiValues.mediatorFee) + parseFloat(payout?.uiValues.providerFee)}
                         {" "}
                         {"SOL"}
                       </>
@@ -894,7 +908,7 @@ export const ChallengeView: FC<{
 
                     {challengeType !== 'NFT' && (
                       <>
-                        {parseFloat(payout?.uiValues.providerRake) + parseFloat(payout?.uiValues.mediatorRake) }
+                        {parseFloat(payout?.uiValues.providerRake) + parseFloat(payout?.uiValues.mediatorRake)}
                         {" "}
                         {"SOL"}
                       </>
@@ -954,9 +968,7 @@ export const ChallengeView: FC<{
                       }
                 }
               >
-                {isLoading ? (
-                  <CircularProgress size={24} />
-                ) : players.length > 0 ? (
+                {players.length > 0 ? (
                   players[0].substring(0, 25) + "..."
                 ) : (
                   "Join"
@@ -1003,9 +1015,7 @@ export const ChallengeView: FC<{
                       }
                 }
               >
-                {isLoading ? (
-                  <CircularProgress size={24} />
-                ) : players.length > 1 ? (
+                {players.length > 1 ? (
                   players[1].substring(0, 25) + "..."
                 ) : (
                   "Join"
@@ -1057,7 +1067,7 @@ export const ChallengeView: FC<{
                       },
                     }}
                   >
-                    {players < 2 || state != "CREATED" && offerings.filter((offering) => offering.authority == players[0]).length == 0 && (
+                    {state == "CREATED" && offerings.filter((offering) => offering.authority == players[0]).length == 0 && (
                       <Box key={account} onClick={() => {
                         if (account == players[0])
                           handleClickOpen();
@@ -1137,7 +1147,7 @@ export const ChallengeView: FC<{
                       <Tooltip title="Lock" arrow>
                         <IconButton
                           size="small"
-                          disabled={!players.includes(account) || !offerings.some(offering => offering.authority === account) || playerStatuses.length < 0 || playerStatuses.some((player) => player.player == account && player.status != "JOINED")}
+                          disabled={!players.includes(account) || !offerings.some(offering => offering.authority === account) || playerStatuses.length < 0 || playerStatuses.some((player) => player.player == account && player.status != "JOINED") || state !== "CREATED" || playerStatus == "ACCEPTED"}
                           onClick={() => {
                             acceptOffering();
                             toast.success("Confirmed Offering!");
@@ -1192,7 +1202,7 @@ export const ChallengeView: FC<{
                     }}
                   >
 
-                    {(players < 2 && state != "CREATED" && offerings.filter((offering) => offering.authority == players[1]).length == 0) && (
+                    {state == "CREATED" && offerings.filter((offering) => offering.authority == players[1]).length == 0 && (
                       <Box onClick={() => {
                         if (account == players[1])
                           handleClickOpen();
@@ -1242,7 +1252,7 @@ export const ChallengeView: FC<{
             fullWidth
             variant="contained"
             size="large"
-            disabled={isLoading || (state !== "CREATED" && state !== "LOCKED")}
+            disabled={isLoading || (state !== "CREATED" && state !== "LOCKED") || players.length < 2}
             sx={{
               backgroundColor: "#3eb718",
               mt: 1,
