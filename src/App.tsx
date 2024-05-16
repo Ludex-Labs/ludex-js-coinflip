@@ -24,25 +24,6 @@ function App({ isCypress }: IProps) {
         display: "grid"
       }}>
         <Toaster />
-        {/* <Lottie
-            options={{
-              loop: true,
-              autoplay: true,
-              animationData: coin,
-              rendererSettings: {
-                preserveAspectRatio: "xMidYMid slice",
-              },
-            }}
-            height={150}
-            width={150}
-            isStopped={false}
-            isPaused={false}
-            style={{
-              position: "absolute",
-              top: 0,
-              zIndex: -1,
-            }}
-          /> */}
         <Main setChain={setChain} isCypress={isCypress} displayWallet={displayWallet} setDisplayWallet={setDisplayWallet} />
       </Box>
     </Web3AuthProvider >

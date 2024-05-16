@@ -4,6 +4,7 @@ import { Transaction } from "@solana/web3.js";
 import Lottie from "react-lottie";
 import * as flipAnimation from "./animations/animation.json";
 import Image from "next/image";
+import * as coin from "../components/animations/coin.json";
 import { useWeb3Auth } from "../services/web3auth";
 
 
@@ -280,7 +281,7 @@ export const ChallengeView: FC<{
   const joinChallenge = async () => {
     setIsLoading(true);
     // FT AND NATIVE Challenges
-    if (payout.type !== 'NFT') {
+    if (challengeType !== 'NFT') {
       try {
         var url = "/api/join";
         const response = await fetch(url, {
@@ -544,18 +545,16 @@ export const ChallengeView: FC<{
     setIsLoading(true);
     try {
       // Prepare payout object
-      let _payout = [
-        { to: challenge?.players[0], offering: "" },
-        { to: challenge?.players[1], offering: "" },
+      let _payout: any = [
       ];
 
       // Swap the offerings
       offerings.map((offering) => {
         if (offering.authority == challenge?.players[1]) {
-          _payout[0].offering = offering.publicKey;
+          _payout.push({ to: challenge?.players[0], offering: offering.publicKey });
         }
         else if (offering.authority == challenge?.players[0]) {
-          _payout[1].offering = offering.publicKey;
+          _payout.push({ to: challenge?.players[1], offering: offering.publicKey });
         }
       });
 
@@ -655,6 +654,32 @@ export const ChallengeView: FC<{
         width: "100%",
       }}
     >
+      {challengeType !== 'NFT' && (
+        <Lottie
+          options={{
+            loop: true,
+            autoplay: true,
+            animationData: coin,
+            rendererSettings: {
+              preserveAspectRatio: "xMidYMid slice",
+            },
+          }}
+          height={150}
+          width={150}
+          isStopped={false}
+          isPaused={false}
+          style={{
+            // position: "absolute",
+            // top: 0,
+            // bottom: 0,
+            // left: 0,
+            // right: 0,
+            zIndex: 1,
+          }}
+        />
+      )}
+
+
       <Typography
         id="challenge-heading"
         variant={"h5"}
