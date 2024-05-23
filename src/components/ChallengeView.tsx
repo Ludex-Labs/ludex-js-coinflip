@@ -38,7 +38,7 @@ import { AddCircleOutlined, LockOutlined } from "@mui/icons-material";
 import { TransitionProps } from '@mui/material/transitions';
 import SwapHorizontalCircleIcon from '@mui/icons-material/SwapHorizontalCircle';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import { off } from "process";
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -386,6 +386,32 @@ export const ChallengeView: FC<{
     }
   }
 
+  const removeOffering = async (offeringPubkey: string) => {
+    try {
+      var url = "/api/nft/removeOffering";
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: challengeId,
+          playerPubkey: account,
+          offeringPubkey: offeringPubkey,
+        }),
+      });
+      const res = await response.json();
+      if (res?.code >= 300 || response?.status >= 300) throw res;
+      if (chain === "SOLANA") await sendSOLtx(res?.transaction, "REMOVE_NFT");
+      else if (chain === "AVALANCHE" || 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
+    } catch (error) {
+      // @ts-ignore
+      if (error?.message) toast.error(JSON.stringify(error.message));
+      else toast.error(JSON.stringify(error));
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   const addSOLOfferings = async () => {
     try {
       var url = "/api/nft/addSOL";
@@ -423,11 +449,10 @@ export const ChallengeView: FC<{
         }),
       });
       const res = await response.json();
+      console.log("refetched offerings", res);
       if (res?.code >= 300 || response?.status >= 300) throw res;
       // Adds metadata to the offerings
-      if (res.length > 0) {
-        setOfferings(res);
-      }
+      setOfferings(res);
     } catch (error) {
       // @ts-ignore
       if (error?.message) toast.error(JSON.stringify(error.message));
@@ -512,8 +537,9 @@ export const ChallengeView: FC<{
     if (sig && action == "LEAVE") toast.success("Challenge left!");
     else if (sig && action == "JOIN") toast.success("Challenge joined!");
     else if (sig && action == "ADD_NFT") toast.success("NFT added!");
+    else if (sig && action == "REMOVE_NFT") toast.success("NFT removed!");
     else if (sig && action == "ADD_SOL") toast.success("SOL added!");
-    else if (sig && action == "ACCEPT_OFFERING") toast.success("Offering accepted!");
+    else if (sig && action == "ACCEPT_OFFERING") toast.success("Offering locked!");
   };
 
   const startGame = async () => {
@@ -732,6 +758,7 @@ export const ChallengeView: FC<{
               toast.success("Refetching challenge!");
               if (challengeType === 'NFT') {
                 getNFTChallenge();
+                getOfferings();
               }
               else {
                 getChallenge(challengeId, true);
@@ -1107,14 +1134,14 @@ export const ChallengeView: FC<{
                       if (offering.mint) {
                         return (
                           <>
-                            <NFTOffering key={offering.mint} offering={offering} />
+                            <NFTOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} />
                             <Divider sx={{ mt: 1, mb: 1, color: "orange" }} />
                           </>
                         )
                       }
                       else {
                         return (
-                          <SolOffering key={offering.mint} offering={offering} />)
+                          <SolOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} />)
                       }
                     })}
                   </Box>
@@ -1151,7 +1178,7 @@ export const ChallengeView: FC<{
                       <Box sx={{ justifySelf: "center", alignSelf: "center", my: 2 }} >
                         <IconButton
                           size="small"
-                          disabled={(!players.includes(account) || playerStatus != "JOINED") || playerStatus == "ACCEPTED"}
+                          disabled={(!players.includes(account) || playerStatus != "JOINED") || playerStatus == "ACCEPTED" || state !== "CREATED"}
                           onClick={() => {
                             handleClickOpen();
                           }}
@@ -1175,7 +1202,6 @@ export const ChallengeView: FC<{
                           disabled={!players.includes(account) || !offerings.some(offering => offering.authority === account) || playerStatuses.length < 0 || playerStatuses.some((player) => player.player == account && player.status != "JOINED") || state !== "CREATED" || playerStatus == "ACCEPTED"}
                           onClick={() => {
                             acceptOffering();
-                            toast.success("Confirmed Offering!");
                           }}
                           sx={{
                             justifySelf: "center",
@@ -1242,11 +1268,11 @@ export const ChallengeView: FC<{
                       // Add NFTOffering component if mint is available
                       if (offering.mint) {
                         return (
-                          <NFTOffering key={offering.mint} offering={offering} />)
+                          <NFTOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} />)
                       }
                       else {
                         return (
-                          <SolOffering key={offering.mint} offering={offering} />)
+                          <SolOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} />)
                       }
                     })}
 
@@ -1492,7 +1518,8 @@ export const ChallengeView: FC<{
 };
 
 
-const NFTOffering = ({ offering }: any) => {
+const NFTOffering = ({ offering, removeOffering, playerStatus }: any) => {
+
   const [metadata, setMetadata] = useState<any>();
 
   useEffect(() => {
@@ -1514,6 +1541,29 @@ const NFTOffering = ({ offering }: any) => {
       sx={{
         display: "grid",
       }}>
+
+      {playerStatus == "JOINED" && (
+        <Tooltip title='Remove Offering' arrow>
+          <IconButton
+            size="small"
+            onClick={() => {
+              removeOffering(offering.publicKey);
+            }}
+            sx={{
+              display: "flex",
+              color: "red",
+              position: "absolute",
+              left: "180px",
+              bottom: "170px",
+              background: "#374151",
+              border: "1px solid #6b727e",
+            }}
+          >
+            <RemoveCircleIcon />
+          </IconButton>
+        </Tooltip>
+      )}
+
       {metadata?.image && (
         <Tooltip title={metadata?.name} arrow>
           <Image
@@ -1531,8 +1581,7 @@ const NFTOffering = ({ offering }: any) => {
     </Box>
   )
 }
-const SolOffering = ({ offering }: any) => {
-
+const SolOffering = ({ offering, removeOffering, playerStatus }: any) => {
   return (
     <Box
       sx={{
@@ -1544,6 +1593,29 @@ const SolOffering = ({ offering }: any) => {
         borderRadius: "6px",
         border: "1px solid #6b727e",
       }}>
+
+      {playerStatus == "JOINED" && (
+        <Tooltip title='Remove Offering' arrow>
+          <IconButton
+            size="small"
+            onClick={() => {
+              removeOffering(offering.publicKey);
+            }}
+            sx={{
+              display: "flex",
+              color: "red",
+              position: "absolute",
+              left: "180px",
+              bottom: "170px",
+              background: "#374151",
+              border: "1px solid #6b727e",
+            }}
+          >
+            <RemoveCircleIcon />
+          </IconButton>
+        </Tooltip>
+      )}
+
       <Image
         alt="SOL"
         src={"/SOL.svg"}
@@ -1560,7 +1632,7 @@ const SolOffering = ({ offering }: any) => {
         fontSize: "14px",
         fontWeight: "bold",
       }}>
-        {offering.uiAmount} SOL
+        {offering.amount} SOL
       </Typography>
     </Box>
 
