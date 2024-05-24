@@ -1134,14 +1134,14 @@ export const ChallengeView: FC<{
                       if (offering.mint) {
                         return (
                           <>
-                            <NFTOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} />
+                            <NFTOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} account={account} />
                             <Divider sx={{ mt: 1, mb: 1, color: "orange" }} />
                           </>
                         )
                       }
                       else {
                         return (
-                          <SolOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} />)
+                          <SolOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} account={account} />)
                       }
                     })}
                   </Box>
@@ -1268,11 +1268,11 @@ export const ChallengeView: FC<{
                       // Add NFTOffering component if mint is available
                       if (offering.mint) {
                         return (
-                          <NFTOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} />)
+                          <NFTOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} account={account} />)
                       }
                       else {
                         return (
-                          <SolOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} />)
+                          <SolOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} account={account}/>)
                       }
                     })}
 
@@ -1518,7 +1518,7 @@ export const ChallengeView: FC<{
 };
 
 
-const NFTOffering = ({ offering, removeOffering, playerStatus }: any) => {
+const NFTOffering = ({ offering, removeOffering, playerStatus, account }: any) => {
 
   const [metadata, setMetadata] = useState<any>();
 
@@ -1540,9 +1540,10 @@ const NFTOffering = ({ offering, removeOffering, playerStatus }: any) => {
     <Box
       sx={{
         display: "grid",
+        position: "relative",
       }}>
 
-      {playerStatus == "JOINED" && (
+      {playerStatus == "JOINED" && offering.authority == account && (
         <Tooltip title='Remove Offering' arrow>
           <IconButton
             size="small"
@@ -1553,8 +1554,8 @@ const NFTOffering = ({ offering, removeOffering, playerStatus }: any) => {
               display: "flex",
               color: "red",
               position: "absolute",
-              left: "180px",
-              bottom: "170px",
+              top: "-15px",
+              right: "-10px",
               background: "#374151",
               border: "1px solid #6b727e",
             }}
@@ -1581,7 +1582,7 @@ const NFTOffering = ({ offering, removeOffering, playerStatus }: any) => {
     </Box>
   )
 }
-const SolOffering = ({ offering, removeOffering, playerStatus }: any) => {
+const SolOffering = ({ offering, removeOffering, playerStatus, account }: any) => {
   return (
     <Box
       sx={{
@@ -1592,9 +1593,10 @@ const SolOffering = ({ offering, removeOffering, playerStatus }: any) => {
         my: 1,
         borderRadius: "6px",
         border: "1px solid #6b727e",
+        position: "relative",
       }}>
 
-      {playerStatus == "JOINED" && (
+      {playerStatus == "JOINED" &&  offering.authority == account && (
         <Tooltip title='Remove Offering' arrow>
           <IconButton
             size="small"
@@ -1605,8 +1607,8 @@ const SolOffering = ({ offering, removeOffering, playerStatus }: any) => {
               display: "flex",
               color: "red",
               position: "absolute",
-              left: "180px",
-              bottom: "170px",
+              top: "-15px",
+              right: "-10px",
               background: "#374151",
               border: "1px solid #6b727e",
             }}
