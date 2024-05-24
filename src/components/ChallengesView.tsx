@@ -86,7 +86,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
       if (res?.code >= 300) throw res;
       // Filter challenges based on challenge type selected
       const filteredChallengesByType = res.challenges.filter((challenge: any) => challengeType === "Native Token" ? challenge.payout.type === "NATIVE" : challengeType === "Fungible Token" ? challenge.payout.type === "FT" : challenge.payout.type === "NFT");
-      const filteredChallengesByChain = filteredChallengesByType.filter((challenge: any) => challenge.payout.chain === chain);
+      const filteredChallengesByChain = filteredChallengesByType.filter((challenge: any) => chain.includes("AVALANCHE") ? challenge.payout.chain === "AVALANCHE" : challenge.payout.chain === "SOLANA");
       setChallenges(filteredChallengesByChain);
       setLoading(false);
     } catch (error) {
@@ -226,6 +226,10 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
 
   const displayCreateChallengeModalNFT = (
     <>
+      <Typography variant="h5" sx={{ textAlign: "center", my: 2 }}>
+        Select Payout
+      </Typography>
+
       <TableContainer sx={{ minWidth: "550px" }} component={Paper}>
         <Table aria-label="collapsible table" sx={{ overflowX: 'scroll' }}>
           <TableHead>
@@ -248,8 +252,8 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
                 }
 
               </TableCell>
-              <TableCell align="left">Name</TableCell>
               <TableCell align="center">Chain</TableCell>
+              <TableCell align="left">Name</TableCell>
               <TableCell align="left">Fee</TableCell>
             </TableRow>
           </TableHead>
@@ -259,6 +263,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
               [(item: any) => item?.[`${sortAttribute}`]],
               [order as boolean | "asc" | "desc"] // Fix: Cast 'order' to the appropriate type
             )?.map((payout, index) => {
+
               return (
                 <TableRow
                   key={payout.id}
@@ -284,9 +289,6 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
                   <TableCell align="left">
                     {payout.id ? payout.id : 'N/A'}
                   </TableCell>
-                  <TableCell align="left">
-                    {payout.name ? payout.name : 'N/A'}
-                  </TableCell>
                   <TableCell align="center">
                     {payout.chain.includes("SOLANA") ? (
                       <Image alt="SOL" src={"/SOL.svg"} width={20} height={20} />
@@ -296,6 +298,9 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
                       <>
                       </>
                     )}
+                  </TableCell>
+                  <TableCell align="left">
+                    {payout.name ? payout.name : 'N/A'}
                   </TableCell>
                   <TableCell align="left">
                     {(parseInt(payout?.mediatorFee) + parseInt(payout?.providerFee)) / LAMPORTS_PER_SOL} SOL
@@ -316,7 +321,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
         className="btn"
         variant="contained"
         disabled={!activePayoutId}
-        sx={{ mt: 2, backgroundColor: "#3eb718" }}
+        sx={{ my: 2, backgroundColor: "#3eb718" }}
       >
         Create
       </Button>
@@ -326,6 +331,10 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
 
   const displayCreateChallengeModal = (
     <>
+      <Typography variant="h5" sx={{ textAlign: "center", my: 2 }}>
+        Select Payout
+      </Typography>
+
       <TableContainer sx={{ minWidth: "550px" }} component={Paper}>
         <Table aria-label="collapsible table" sx={{ overflowX: 'scroll' }}>
           <TableHead>
@@ -348,9 +357,12 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
                 }
 
               </TableCell>
+              <TableCell align="left">Chain</TableCell>
               <TableCell align="left">Name</TableCell>
-              <TableCell align="center">Chain</TableCell>
+              <TableCell align="left">Token</TableCell>
+              <TableCell align="left">Entry Fee</TableCell>
               <TableCell align="left">Rake</TableCell>
+              <TableCell align="left">Limit</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -358,7 +370,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
               payouts,
               [(item: any) => item?.[`${sortAttribute}`]],
               [order as boolean | "asc" | "desc"] // Fix: Cast 'order' to the appropriate type
-            )?.map((payout: any, index: number) => {
+            )?.map((payout: any) => {
               return (
                 <TableRow
                   key={payout.id}
@@ -381,13 +393,12 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
                     background: activePayoutId === payout?.id ? "green" : "transparent",
                   }}
                 >
+                  {/* ID */}
                   <TableCell align="left">
                     {payout.id ? payout.id : 'N/A'}
                   </TableCell>
+                  {/* Chain */}
                   <TableCell align="left">
-                    {payout.name ? payout.name : 'N/A'}
-                  </TableCell>
-                  <TableCell align="center">
                     {payout.chain.includes("SOLANA") ? (
                       <Image alt="SOL" src={"/SOL.svg"} width={20} height={20} />
                     ) : chain.includes("AVALANCHE") ? (
@@ -397,12 +408,50 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
                       </>
                     )}
                   </TableCell>
+                  {/* Name */}
                   <TableCell align="left">
-                    {(parseInt(payout?.mediatorRake) + parseInt(payout?.providerRake)) / LAMPORTS_PER_SOL} SOL
+                    {payout.name ? payout.name : 'N/A'}
                   </TableCell>
+                  {/*Token */}
+                  <TableCell align="left">
+                    {/* Display image only if icon is avaialble */}
+                    {payout.Mint.icon && (
+                      <Image style={{ verticalAlign: "sub", marginRight: "5px" }} alt="Token Icon" src={payout.Mint.icon} width={20} height={20} />
+                    )}
+                    {payout.Mint.ticker ? payout.Mint.ticker : 'N/A'}
+                  </TableCell>
+                  {/* Entry Fee */}
+                  <TableCell align="left">
+                    {(parseInt(payout?.entryFee) / 10 ** payout.Mint.decimalPosition)}  {payout.Mint.ticker}
+                  </TableCell>
+                  {/* Provider and Mediator Rake */}
+                  {chain.includes("SOLANA") && (
+                    <TableCell align="left">
+                      {(parseInt(payout?.mediatorRake) + parseInt(payout?.providerRake)) / LAMPORTS_PER_SOL} SOL
+                    </TableCell>
+                  )}
+                  {chain.includes("AVALANCHE") && (
+                    <TableCell align="left">
+                      {(parseInt(payout?.mediatorRake) + parseInt(payout?.providerRake)) / (10 ** payout.Mint.decimalPosition)} AVAX
+                    </TableCell>
+                  )}
+                  {/* Limit */}
+                  <TableCell align="left">
+                    {payout.limit ? payout.limit : 'N/A'}
+                  </TableCell>
+
                 </TableRow>
               )
             })}
+
+            {payouts.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  No payouts available
+                </TableCell>
+              </TableRow>
+            
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -415,7 +464,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
         className="btn"
         variant="contained"
         disabled={!activePayoutId}
-        sx={{ mt: 2, backgroundColor: "#3eb718" }}
+        sx={{ my: 2, backgroundColor: "#3eb718" }}
       >
         Create
       </Button>
@@ -484,7 +533,18 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
         >
           ID
         </Typography>
-
+        <Typography
+          variant={"body1"}
+        >
+          Players
+        </Typography>
+        {challengeType !== "NFT" && (
+          <Typography
+            variant={"body1"}
+          >
+            Mint
+          </Typography>
+        )}
         <Typography
           variant={"body1"}
         >
@@ -566,8 +626,19 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
                       },
                     }}
                   >
-                    <div>{challenge?.id}</div>
-                    <div>{challenge?.state}</div>
+
+                    <p style={{ display: "inline" }}>{challenge?.id}</p>
+                    <p style={{ display: "inline" }}> {challenge.players.length} / {challenge.payout.limit}</p>
+
+                    {challenge.payout.type !== 'NFT' && (
+                      <span style={{ display: "flex", alignItems: "center" }}>
+                        {challenge.payout.mint.icon && (
+                          <Image style={{ verticalAlign: "sub", marginRight: "5px" }} alt={challenge.payout.mint.icon} src={challenge.payout.mint.icon} width={20} height={20} />
+                        )}
+                        <p style={{ display: "inline" }}>{challenge?.payout.mint.ticker}</p>
+                      </span>
+                    )}
+                    <p style={{ display: "inline" }}>{challenge?.state}</p>
                   </Box>
                 )
               }

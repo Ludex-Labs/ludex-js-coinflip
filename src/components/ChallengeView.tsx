@@ -777,7 +777,7 @@ export const ChallengeView: FC<{
             <RefreshIcon />
           </IconButton>
         </>
-
+        {/* Challenge Component */}
         <Box
           sx={{
             border: "1px solid rgb(107, 114, 126)",
@@ -873,6 +873,38 @@ export const ChallengeView: FC<{
               {payout?.type}
             </Box>
           </Box>
+
+          {/* Token */}
+          {payout.type == 'FT' && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+            >
+              <span>Token</span>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                {payout?.mint?.icon && (
+                  <Image
+                    alt={payout?.mint?.ticker}
+                    src={payout?.mint?.icon}
+                    width={18}
+                    height={18}
+                    style={{
+                      marginRight: "7px",
+                    }}
+                  />
+                )}
+                {payout?.mint?.ticker}
+
+              </Box>
+            </Box>
+          )}
           {/* PayoutID */}
           <Box
             sx={{
@@ -1272,7 +1304,7 @@ export const ChallengeView: FC<{
                       }
                       else {
                         return (
-                          <SolOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} account={account}/>)
+                          <SolOffering key={offering.mint} offering={offering} removeOffering={removeOffering} playerStatus={playerStatus} account={account} />)
                       }
                     })}
 
@@ -1596,7 +1628,7 @@ const SolOffering = ({ offering, removeOffering, playerStatus, account }: any) =
         position: "relative",
       }}>
 
-      {playerStatus == "JOINED" &&  offering.authority == account && (
+      {playerStatus == "JOINED" && offering.authority == account && (
         <Tooltip title='Remove Offering' arrow>
           <IconButton
             size="small"
