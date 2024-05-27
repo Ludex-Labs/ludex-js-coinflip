@@ -1,24 +1,23 @@
 import axios from "axios";
 
-const ludexApi = process.env.NEXT_PUBLIC_BASE_URL + '/v2/nftChallenge'
-const authToken = process.env.LUDEX_KEY
+const ludexApi = process.env.NEXT_PUBLIC_BASE_URL + '/v2/nftChallenge';
+const authToken = process.env.LUDEX_KEY;
 
 export default async function handler(req, res) {
   const { payoutId } = req.body;
 
-  console.log('🚨🚨🚨🚨'.payoutId)
+  console.log('🚨🚨🚨🚨'.payoutId);
+  
   try {
-    
     const requestbody = {
-        payoutId
+      payoutId
     }
-    
     const response = await axios.post(ludexApi, requestbody, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     res.json(response.data);
   } catch (error) {

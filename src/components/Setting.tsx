@@ -12,17 +12,8 @@ const Setting = ({ setChain }: IProps) => {
   const { chain } = useContext(Web3AuthContext);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        mb: 4,
-      }}
-    >
-      <Typography variant="h4">Select Chain</Typography>
-
+    <>
+      <Typography sx={{ justifySelf: "center" }} variant="h4">Select Chain</Typography>
       <Box
         sx={{
           display: "flex",
@@ -65,7 +56,7 @@ const Setting = ({ setChain }: IProps) => {
           );
         })}
       </Box>
-    </Box>
+    </>
   );
 };
 

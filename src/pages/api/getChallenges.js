@@ -5,9 +5,9 @@ const challengeAPI = new Ludex.ClientScoped(process.env.LUDEX_KEY, {
 }).challenge;
 
 export default async function handler(req, res) {
+  console.log('🚨🚨🚨🚨','getChallenges', '🚨🚨🚨🚨');
   const { payoutId } = req.body;
   const filters = {
-    payoutId: payoutId,
   };
 
   try {

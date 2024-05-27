@@ -12,7 +12,9 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@iconify/react": "^4.1.1",
     "@ludex-labs/ludex-sdk-js": "^2.0.6",
+    "@metaplex-foundation/js": "^0.20.1",
     "@mui/icons-material": "^5.14.16",
     "@mui/material": "^5.14.17",
     "@walletconnect/sign-client": "^2.10.5",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "@types/elliptic": "^6.4.14",
+    "@types/lodash": "^4.17.1",
     "@types/node": "20.4.1",
     "@types/react": "18.2.14",
     "@types/react-dom": "18.2.7",

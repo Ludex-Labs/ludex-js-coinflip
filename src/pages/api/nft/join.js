@@ -10,21 +10,16 @@ export default async function handler(req, res) {
 
   console.log('🚨🚨🚨🚨', url)
   try {
-    
     const requestbody = {
-        playerPubkey,
-        offerings: [{
-            mint: 'Native SOL',
-            amount: 0.00000001
-        }]
+      playerPubkey,
     }
-    
+
     const response = await axios.patch(url, requestbody, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     res.json(response.data);
   } catch (error) {
