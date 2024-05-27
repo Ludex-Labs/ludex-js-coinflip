@@ -450,7 +450,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
                   No payouts available
                 </TableCell>
               </TableRow>
-            
+
             )}
           </TableBody>
         </Table>
@@ -493,6 +493,7 @@ export function ChallengesView({ setChallengeId, isCypress, setChain, challengeT
           return (
             <Tooltip key={_type} title={`${_type} Challenges`}>
               <Button
+                disabled={chain.includes("AVALANCHE") && _type === "NFT"}
                 key={_type}
                 variant={challengeType === _type ? "contained" : "outlined"}
                 onClick={() => setChallengeType(_type)}
