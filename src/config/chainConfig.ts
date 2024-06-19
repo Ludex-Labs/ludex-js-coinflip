@@ -1,5 +1,6 @@
 import { CHAIN_NAMESPACES, CustomChainConfig } from "@web3auth/base";
 
+console.log(process.env.NEXT_PUBLIC_SOLANA_MAINNET_RPC);
 export const CHAIN_CONFIG = {
   SOLANA: {
     chainNamespace: CHAIN_NAMESPACES.SOLANA,
@@ -12,7 +13,7 @@ export const CHAIN_CONFIG = {
   } as CustomChainConfig,
   SOLANA_MAINNET: {
     chainNamespace: CHAIN_NAMESPACES.SOLANA,
-    rpcTarget: "https://rpc.ankr.com/solana",
+    rpcTarget: process.env.NEXT_PUBLIC_SOLANA_MAINNET_RPC,
     blockExplorer: "https://solscan.io/",
     chainId: "0x1",
     displayName: "Solana Mainnet",
@@ -28,7 +29,6 @@ export const CHAIN_CONFIG = {
     ticker: "AVAX",
     tickerName: "Avalanche",
   } as CustomChainConfig,
-
   AVALANCHE_MAINNET: {
     chainNamespace: CHAIN_NAMESPACES.EIP155,
     rpcTarget: "https://api.avax.network/ext/bc/C/rpc",
@@ -38,7 +38,6 @@ export const CHAIN_CONFIG = {
     ticker: "AVAX",
     tickerName: "Avalanche",
   } as CustomChainConfig,
-
 } as const;
 
 export type CHAIN_CONFIG_TYPE = keyof typeof CHAIN_CONFIG;

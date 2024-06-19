@@ -8,7 +8,6 @@ import {
 } from "@solana/web3.js";
 import { SolanaWallet } from "@web3auth/solana-provider";
 import { IWalletProvider } from "./walletProvider";
-import { sign } from "crypto";
 
 const solanaProvider = (provider: IProvider): IWalletProvider => {
   const solanaWallet = new SolanaWallet(provider);

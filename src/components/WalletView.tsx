@@ -25,8 +25,10 @@ export const WalletView: FC<{
   };
 
   const getAccountDetails = async () => {
-    const accounts = await getAccounts();
-    setAccounts(accounts);
+    const _accounts = await getAccounts();
+    if (_accounts) {
+      setAccounts(_accounts);
+    }
 
     const balance = await getBalance();
     const _balance =

@@ -12,7 +12,7 @@ export const getWalletProvider = (
   chain: string,
   provider: IProvider
 ): IWalletProvider => {
-  if (chain === "SOLANA") {
+  if (chain.includes("SOLANA")) {
     return solanaProvider(provider);
   }
   return ethProvider(provider);
