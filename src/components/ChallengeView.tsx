@@ -294,7 +294,7 @@ export const ChallengeView: FC<{
         });
         const res = await response.json();
         if (res?.code >= 300 || response?.status >= 300) throw res;
-        if (chain === "SOLANA") await sendSOLtx(res?.transaction, "JOIN");
+        if (chain === "SOLANA" || "SOLANA_MAINNET") await sendSOLtx(res?.transaction, "JOIN");
         else if (chain === "AVALANCHE" || 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
       } catch (error) {
         // @ts-ignore
@@ -319,7 +319,7 @@ export const ChallengeView: FC<{
         });
         const res = await response.json();
         if (res?.code >= 300 || response?.status >= 300) throw res;
-        if (chain === "SOLANA") await sendSOLtx(res?.transaction, "JOIN");
+        if (chain === "SOLANA" || "SOLANA_MAINNET") await sendSOLtx(res?.transaction, "JOIN");
         else if (chain === "AVALANCHE" || 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
       } catch (error) {
         // @ts-ignore
@@ -346,7 +346,7 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300 || response?.status >= 300) throw res;
-      if (chain === "SOLANA") await sendSOLtx(res?.transaction, "LEAVE");
+      if (chain === "SOLANA" || "SOLANA_MAINNET") await sendSOLtx(res?.transaction, "LEAVE");
       else if (chain === "AVALANCHE" || 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
     } catch (error) {
       // @ts-ignore
@@ -374,7 +374,7 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300 || response?.status >= 300) throw res;
-      if (chain === "SOLANA") await sendSOLtx(res?.transaction, "ADD_NFT");
+      if (chain === "SOLANA" || "SOLANA_MAINNET") await sendSOLtx(res?.transaction, "ADD_NFT");
       else if (chain === "AVALANCHE" || 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
     } catch (error) {
       // @ts-ignore
@@ -400,7 +400,7 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300 || response?.status >= 300) throw res;
-      if (chain === "SOLANA") await sendSOLtx(res?.transaction, "REMOVE_NFT");
+      if (chain === "SOLANA" || "SOLANA_MAINNET") await sendSOLtx(res?.transaction, "REMOVE_NFT");
       else if (chain === "AVALANCHE" || 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
     } catch (error) {
       // @ts-ignore
@@ -426,7 +426,7 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300 || response?.status >= 300) throw res;
-      if (chain === "SOLANA") await sendSOLtx(res?.transaction, "ADD_SOL");
+      if (chain === "SOLANA" || "SOLANA_MAINNET") await sendSOLtx(res?.transaction, "ADD_SOL");
       else if (chain === "AVALANCHE" || 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
     } catch (error) {
       // @ts-ignore
@@ -478,7 +478,7 @@ export const ChallengeView: FC<{
       if (res?.code >= 300 || response?.status >= 300) throw res;
       console.log(res.transaction, 'acceptOffering');
 
-      if (chain === "SOLANA") await sendSOLtx(res?.transaction, "ACCEPT_OFFERING");
+      if (chain === "SOLANA" || "SOLANA_MAINNET") await sendSOLtx(res?.transaction, "ACCEPT_OFFERING");
       else if (chain === "AVALANCHE" || 'AVALANCHE_MAINNET') await sendAVAXtx(res?.transaction);
 
     } catch (error) {
@@ -504,7 +504,7 @@ export const ChallengeView: FC<{
       });
       const res = await response.json();
       if (res?.code >= 300 || response?.status >= 300) throw res;
-      if (chain === "SOLANA") await sendSOLtx(res?.transaction, "JOIN");
+      if (chain === "SOLANA" || "SOLANA_MAINNET") await sendSOLtx(res?.transaction, "JOIN");
       else if (chain === "AVALANCHE") await sendAVAXtx(res?.transaction);
     } catch (error) {
       // @ts-ignore
@@ -532,6 +532,7 @@ export const ChallengeView: FC<{
 
   const sendSOLtx = async (tx: string, action: string) => {
     const transaction = Transaction.from(Buffer.from(tx, "base64"));
+    console.log(transaction);
     const sig = await signAndSendTransaction(transaction);
 
     if (sig && action == "LEAVE") toast.success("Challenge left!");
