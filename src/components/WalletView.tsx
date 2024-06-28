@@ -32,7 +32,7 @@ export const WalletView: FC<{
 
     const balance = await getBalance();
     const _balance =
-      chain === "SOLANA"
+      chain.includes("SOLANA") 
         ? balance / 10 ** 9
         : chain === "AVALANCHE"
         ? balance / 10 ** 18
